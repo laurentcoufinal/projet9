@@ -1,10 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { OrganizationDetailsComponent } from './organization-details.component';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Organization, OrganizationService } from '../organization.service';
 import { PersonService } from '../person.service';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('OrganizationDetailsComponent', () => {
   let component: OrganizationDetailsComponent;
@@ -20,22 +21,24 @@ describe('OrganizationDetailsComponent', () => {
     ]);
 
     await TestBed.configureTestingModule({
-      imports: [OrganizationDetailsComponent, HttpClientTestingModule, RouterTestingModule],
-      providers: [
+    imports: [OrganizationDetailsComponent, RouterTestingModule],
+    providers: [
         { provide: OrganizationService, useValue: organizationService },
         { provide: PersonService, useValue: jasmine.createSpyObj('PersonService', ['fetchById']) },
         {
-          provide: ActivatedRoute,
-          useValue: {
-            snapshot: {
-              paramMap: {
-                get: (key: string) => (key === 'orgId' ? 'new' : null),
-              },
+            provide: ActivatedRoute,
+            useValue: {
+                snapshot: {
+                    paramMap: {
+                        get: (key: string) => (key === 'orgId' ? 'new' : null),
+                    },
+                },
             },
-          },
         },
-      ],
-    }).compileComponents();
+        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClientTesting(),
+    ]
+}).compileComponents();
 
     fixture = TestBed.createComponent(OrganizationDetailsComponent);
     component = fixture.componentInstance;
@@ -91,22 +94,24 @@ describe('OrganizationDetailsComponent existing org', () => {
     });
 
     await TestBed.configureTestingModule({
-      imports: [OrganizationDetailsComponent, HttpClientTestingModule, RouterTestingModule],
-      providers: [
+    imports: [OrganizationDetailsComponent, RouterTestingModule],
+    providers: [
         { provide: OrganizationService, useValue: organizationService },
         { provide: PersonService, useValue: jasmine.createSpyObj('PersonService', ['fetchById']) },
         {
-          provide: ActivatedRoute,
-          useValue: {
-            snapshot: {
-              paramMap: {
-                get: () => '2',
-              },
+            provide: ActivatedRoute,
+            useValue: {
+                snapshot: {
+                    paramMap: {
+                        get: () => '2',
+                    },
+                },
             },
-          },
         },
-      ],
-    }).compileComponents();
+        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClientTesting(),
+    ]
+}).compileComponents();
 
     const fixture = TestBed.createComponent(OrganizationDetailsComponent);
     component = fixture.componentInstance;

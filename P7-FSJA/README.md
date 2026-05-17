@@ -4,7 +4,7 @@
 
 # MicroCRM — Orion (P7 Full-Stack)
 
-Application CRM simplifiée (Spring Boot 3 + Angular 17) avec chaîne **CI/CD**, conteneurisation **Docker Compose** et analyse **SonarCloud**.
+Application CRM simplifiée (Spring Boot 3 + Angular 18) avec chaîne **CI/CD**, conteneurisation **Docker Compose** et analyse **SonarCloud**.
 
 ![Page d'accueil](./misc/screenshots/screenshot_1.png)
 ![Édition de la fiche d'un individu](./misc/screenshots/screenshot_2.png)
@@ -28,7 +28,7 @@ Ce monorepo contient :
 | Répertoire | Stack |
 |------------|-------|
 | `back/` | Java 17, Spring Boot 3, Gradle, HSQLDB |
-| `front/` | Angular 17, Karma/Jasmine |
+| `front/` | Angular 18.2, Karma/Jasmine |
 | `misc/docker/` | Caddyfile, configuration Supervisor |
 | `.github/workflows/` (racine du dépôt) | Pipelines CI/CD |
 
@@ -184,6 +184,26 @@ docker compose up -d
 | [`documentation-technique.md`](documentation-technique.md) | Documentation complète (pipeline, sécurité, sauvegarde, KPI) — export PDF via Pandoc |
 | [`../cdc.md`](../cdc.md) | Cahier des charges |
 | [`../documentation techinique.md`](../documentation%20techinique.md) | Template fourni |
+
+## Sécurité des dépendances npm
+
+Après `npm ci` dans `front/` :
+
+```shell
+cd front
+npm audit
+```
+
+| Étape | Résultat typique |
+|-------|------------------|
+| Avant migration (Angular 17) | 44 vulnérabilités (28 High) |
+| Après migration **Angular 18.2.14** + `npm audit fix` | 44 vulnérabilités (28 High signalées par l’audit npm) |
+
+**Note :** `npm audit` propose souvent Angular **19** pour fermer les advisories (`<=18.2.14`). Le projet reste sur **18.2.14** (dernier patch de la branche 18.2.x). Les vulnérabilités **webpack-dev-server** / **esbuild** concernent surtout `ng serve` en développement ; la production utilise des assets compilés servis par Caddy.
+
+Suivi continu : [`.github/dependabot.yml`](../.github/dependabot.yml) (mises à jour hebdomadaires npm).
+
+Rapports détaillés : [`front/audit-avant.txt`](front/audit-avant.txt), [`front/audit-apres.txt`](front/audit-apres.txt).
 
 ## Dépannage
 

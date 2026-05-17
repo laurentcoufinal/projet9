@@ -1,0 +1,2 @@
+# État npm audit avant migration Angular 18 (mai 2026)
+44 vulnerabilities (3 low, 13 moderate, 28 high)

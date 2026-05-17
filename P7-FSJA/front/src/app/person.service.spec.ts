@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Person, PersonService } from './person.service';
 import { API_BASE_URL } from './config';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 /** Laisse Zone.js émettre la requête HTTP enchaînée après un flush (firstValueFrom = microtâche). */
 async function tick(): Promise<void> {
@@ -14,8 +15,9 @@ describe('PersonService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
-    });
+    imports: [],
+    providers: [provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+});
     service = TestBed.inject(PersonService);
     httpMock = TestBed.inject(HttpTestingController);
   });

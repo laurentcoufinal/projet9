@@ -1,0 +1,242 @@
+# npm audit report
+
+@angular/common  <=19.2.15
+Severity: high
+Depends on vulnerable versions of @angular/core
+Angular is Vulnerable to XSRF Token Leakage via Protocol-Relative URLs in Angular HTTP Client - https://github.com/advisories/GHSA-58c5-g7wp-6w37
+fix available via `npm audit fix --force`
+Will install @angular/common@19.2.22, which is a breaking change
+node_modules/@angular/common
+  @angular/forms  <=19.2.15
+  Depends on vulnerable versions of @angular/common
+  Depends on vulnerable versions of @angular/core
+  Depends on vulnerable versions of @angular/platform-browser
+  node_modules/@angular/forms
+  @angular/platform-browser  <=19.2.15
+  Depends on vulnerable versions of @angular/animations
+  Depends on vulnerable versions of @angular/common
+  Depends on vulnerable versions of @angular/core
+  node_modules/@angular/platform-browser
+  @angular/platform-browser-dynamic  <=19.2.15
+  Depends on vulnerable versions of @angular/common
+  Depends on vulnerable versions of @angular/compiler
+  Depends on vulnerable versions of @angular/core
+  Depends on vulnerable versions of @angular/platform-browser
+  node_modules/@angular/platform-browser-dynamic
+  @angular/router  <=0.0.0-ROUTERPLACEHOLDER || 2.0.0-rc.0 - 19.2.15
+  Depends on vulnerable versions of @angular/common
+  Depends on vulnerable versions of @angular/core
+  Depends on vulnerable versions of @angular/platform-browser
+  node_modules/@angular/router
+
+@angular/compiler  <=18.2.14
+Severity: high
+Depends on vulnerable versions of @angular/core
+Angular Stored XSS Vulnerability via SVG Animation, SVG URL and MathML Attributes - https://github.com/advisories/GHSA-v4hv-rgfq-gp49
+Angular has XSS Vulnerability via Unsanitized SVG Script Attributes - https://github.com/advisories/GHSA-jrmj-c5cx-3cw6
+Angular vulnerable to XSS in i18n attribute bindings - https://github.com/advisories/GHSA-g93w-mfhg-p222
+fix available via `npm audit fix --force`
+Will install @angular/compiler@19.2.22, which is a breaking change
+node_modules/@angular/compiler
+  @angular/compiler-cli  <=18.2.14
+  Depends on vulnerable versions of @angular/compiler
+  node_modules/@angular/compiler-cli
+    @angular-devkit/build-angular  <=20.3.24 || 21.0.0-next.0 - 21.2.8 || 22.0.0-next.0 - 22.0.0-next.5
+    Depends on vulnerable versions of @angular-devkit/architect
+    Depends on vulnerable versions of @angular-devkit/build-webpack
+    Depends on vulnerable versions of @angular-devkit/core
+    Depends on vulnerable versions of @angular/build
+    Depends on vulnerable versions of @angular/compiler-cli
+    Depends on vulnerable versions of @ngtools/webpack
+    Depends on vulnerable versions of copy-webpack-plugin
+    Depends on vulnerable versions of esbuild
+    Depends on vulnerable versions of picomatch
+    Depends on vulnerable versions of postcss
+    Depends on vulnerable versions of webpack
+    node_modules/@angular-devkit/build-angular
+    @angular/build  <=19.2.23 || 20.0.0-next.0 - 20.3.21 || 21.0.0-next.0 - 21.2.4 || 22.0.0-next.0 - 22.0.0-next.3
+    Depends on vulnerable versions of @angular-devkit/architect
+    Depends on vulnerable versions of @angular/compiler-cli
+    Depends on vulnerable versions of @vitejs/plugin-basic-ssl
+    Depends on vulnerable versions of esbuild
+    Depends on vulnerable versions of picomatch
+    Depends on vulnerable versions of rollup
+    Depends on vulnerable versions of vite
+    node_modules/@angular/build
+    @ngtools/webpack  <=1.2.13 || 7.0.0-beta.0 - 18.2.21
+    Depends on vulnerable versions of @angular/compiler-cli
+    node_modules/@ngtools/webpack
+
+@angular/core  <=18.2.14
+Severity: high
+Angular has XSS Vulnerability via Unsanitized SVG Script Attributes - https://github.com/advisories/GHSA-jrmj-c5cx-3cw6
+Angular i18n vulnerable to Cross-Site Scripting - https://github.com/advisories/GHSA-prjf-86w9-mfqv
+Angular vulnerable to XSS in i18n attribute bindings - https://github.com/advisories/GHSA-g93w-mfhg-p222
+fix available via `npm audit fix --force`
+Will install @angular/core@19.2.22, which is a breaking change
+node_modules/@angular/core
+  @angular/animations  <=18.2.14
+  Depends on vulnerable versions of @angular/core
+  node_modules/@angular/animations
+
+ajv  7.0.0-alpha.0 - 8.17.1
+Severity: moderate
+ajv has ReDoS when using `$data` option - https://github.com/advisories/GHSA-2g4f-4pwh-qvx6
+fix available via `npm audit fix --force`
+Will install @angular-devkit/build-angular@19.2.26, which is a breaking change
+node_modules/ajv
+  @angular-devkit/core  12.0.0-next.0 - 19.2.22 || 20.0.0-next.0 - 20.3.21 || 21.0.0-next.0 - 21.2.4 || 22.0.0-next.0 - 22.0.0-next.3
+  Depends on vulnerable versions of ajv
+  Depends on vulnerable versions of picomatch
+  node_modules/@angular-devkit/core
+    @angular-devkit/architect  0.1000.0-next.0 - 0.1000.0-rc.1 || 0.1200.0-next.0 - 0.1902.21 || 0.2000.0-next.0 - 0.2003.17 || 0.2100.0-next.0 - 0.2101.4 || 0.2102.0-next.0 - 0.2102.0-rc.2
+    Depends on vulnerable versions of @angular-devkit/core
+    node_modules/@angular-devkit/architect
+      @angular-devkit/build-webpack  0.1200.0-next.0 - 0.1902.21 || 0.2000.0-next.0 - 0.2003.17 || 0.2100.0-next.0 - 0.2101.4 || 0.2102.0-next.0 - 0.2102.0-rc.2
+      Depends on vulnerable versions of @angular-devkit/architect
+      node_modules/@angular-devkit/build-webpack
+    @angular-devkit/schematics  12.0.0-next.0 - 19.2.21 || 20.0.0-next.0 - 20.3.17 || 21.0.0-next.0 - 21.1.4 || 21.2.0-next.0 - 21.2.0-rc.2
+    Depends on vulnerable versions of @angular-devkit/core
+    node_modules/@angular-devkit/schematics
+    @angular/cli  6.2.9 || 7.3.0-beta.0 - 20.3.17 || 21.0.0-next.0 - 21.1.4 || 21.2.0-next.0 - 21.2.0-rc.2
+    Depends on vulnerable versions of @angular-devkit/architect
+    Depends on vulnerable versions of @angular-devkit/core
+    Depends on vulnerable versions of @angular-devkit/schematics
+    Depends on vulnerable versions of @inquirer/prompts
+    Depends on vulnerable versions of @listr2/prompt-adapter-inquirer
+    Depends on vulnerable versions of @schematics/angular
+    Depends on vulnerable versions of pacote
+    node_modules/@angular/cli
+    @schematics/angular  12.0.0-next.0 - 19.2.21 || 20.0.0-next.0 - 20.3.17 || 21.0.0-next.0 - 21.1.4 || 21.2.0-next.0 - 21.2.0-rc.2
+    Depends on vulnerable versions of @angular-devkit/core
+    Depends on vulnerable versions of @angular-devkit/schematics
+    node_modules/@schematics/angular
+
+esbuild  <=0.24.2
+Severity: moderate
+esbuild enables any website to send any requests to the development server and read the response - https://github.com/advisories/GHSA-67mh-4wv8-2f99
+fix available via `npm audit fix --force`
+Will install @angular-devkit/build-angular@19.2.26, which is a breaking change
+node_modules/esbuild
+node_modules/vite/node_modules/esbuild
+  vite  <=6.4.1
+  Depends on vulnerable versions of esbuild
+  node_modules/vite
+    @vitejs/plugin-basic-ssl  <=1.1.0
+    Depends on vulnerable versions of vite
+    node_modules/@vitejs/plugin-basic-ssl
+
+picomatch  4.0.0 - 4.0.3
+Severity: high
+Picomatch: Method Injection in POSIX Character Classes causes incorrect Glob Matching - https://github.com/advisories/GHSA-3v7f-55p6-f55p
+Picomatch has a ReDoS vulnerability via extglob quantifiers - https://github.com/advisories/GHSA-c2c7-rcm5-vvqj
+fix available via `npm audit fix --force`
+Will install @angular-devkit/build-angular@19.2.26, which is a breaking change
+node_modules/picomatch
+
+postcss  <8.5.10
+Severity: moderate
+PostCSS has XSS via Unescaped </style> in its CSS Stringify Output - https://github.com/advisories/GHSA-qx2v-qp2m-jg93
+fix available via `npm audit fix --force`
+Will install @angular-devkit/build-angular@19.2.26, which is a breaking change
+node_modules/postcss
+
+rollup  4.0.0 - 4.58.0
+Severity: high
+Rollup 4 has Arbitrary File Write via Path Traversal - https://github.com/advisories/GHSA-mw96-cpmx-2vgc
+fix available via `npm audit fix --force`
+Will install @angular-devkit/build-angular@19.2.26, which is a breaking change
+node_modules/rollup
+
+serialize-javascript  <=7.0.4
+Severity: high
+Serialize JavaScript is Vulnerable to RCE via RegExp.flags and Date.prototype.toISOString() - https://github.com/advisories/GHSA-5c6j-r48x-rmvq
+Serialize JavaScript has CPU Exhaustion Denial of Service via crafted array-like objects - https://github.com/advisories/GHSA-qj8w-gfj5-8c6v
+fix available via `npm audit fix --force`
+Will install @angular-devkit/build-angular@19.2.26, which is a breaking change
+node_modules/serialize-javascript
+  copy-webpack-plugin  4.3.0 - 13.0.1
+  Depends on vulnerable versions of serialize-javascript
+  node_modules/copy-webpack-plugin
+
+tar  <=7.5.10
+Severity: high
+node-tar Vulnerable to Arbitrary File Creation/Overwrite via Hardlink Path Traversal - https://github.com/advisories/GHSA-34x7-hfp2-rc4v
+node-tar is Vulnerable to Arbitrary File Overwrite and Symlink Poisoning via Insufficient Path Sanitization - https://github.com/advisories/GHSA-8qq5-rm4j-mr97
+Arbitrary File Read/Write via Hardlink Target Escape Through Symlink Chain in node-tar Extraction - https://github.com/advisories/GHSA-83g3-92jg-28cx
+tar has Hardlink Path Traversal via Drive-Relative Linkpath - https://github.com/advisories/GHSA-qffp-2rhf-9h96
+node-tar Symlink Path Traversal via Drive-Relative Linkpath - https://github.com/advisories/GHSA-9ppj-qmqm-q256
+Race Condition in node-tar Path Reservations via Unicode Ligature Collisions on macOS APFS - https://github.com/advisories/GHSA-r6q2-hw4h-h46w
+fix available via `npm audit fix --force`
+Will install @angular/cli@19.2.26, which is a breaking change
+node_modules/tar
+  cacache  14.0.0 - 18.0.4
+  Depends on vulnerable versions of tar
+  node_modules/cacache
+    make-fetch-happen  7.1.1 - 14.0.0
+    Depends on vulnerable versions of cacache
+    node_modules/make-fetch-happen
+      @sigstore/sign  <=2.3.2
+      Depends on vulnerable versions of make-fetch-happen
+      node_modules/@sigstore/sign
+        sigstore  1.6.0 - 2.3.1
+        Depends on vulnerable versions of @sigstore/sign
+        Depends on vulnerable versions of @sigstore/tuf
+        node_modules/sigstore
+          pacote  5.0.0 - 19.0.1 || 20.0.0 || 21.0.0
+          Depends on vulnerable versions of @npmcli/run-script
+          Depends on vulnerable versions of cacache
+          Depends on vulnerable versions of npm-registry-fetch
+          Depends on vulnerable versions of sigstore
+          Depends on vulnerable versions of tar
+          node_modules/pacote
+      node-gyp  <=10.3.1
+      Depends on vulnerable versions of make-fetch-happen
+      Depends on vulnerable versions of tar
+      node_modules/node-gyp
+        @npmcli/run-script  1.1.1 - 9.0.1
+        Depends on vulnerable versions of node-gyp
+        node_modules/@npmcli/run-script
+      npm-registry-fetch  7.0.0 - 18.0.0
+      Depends on vulnerable versions of make-fetch-happen
+      node_modules/npm-registry-fetch
+      tuf-js  <=2.2.1
+      Depends on vulnerable versions of make-fetch-happen
+      node_modules/tuf-js
+        @sigstore/tuf  <=2.3.4
+        Depends on vulnerable versions of tuf-js
+        node_modules/@sigstore/tuf
+
+tmp  <=0.2.3
+tmp allows arbitrary temporary file / directory write via symbolic link `dir` parameter - https://github.com/advisories/GHSA-52f5-9888-hmc6
+fix available via `npm audit fix --force`
+Will install @angular/cli@19.2.26, which is a breaking change
+node_modules/tmp
+  external-editor  >=1.1.1
+  Depends on vulnerable versions of tmp
+  node_modules/external-editor
+    @inquirer/editor  <=4.2.15
+    Depends on vulnerable versions of external-editor
+    node_modules/@inquirer/editor
+      @inquirer/prompts  <=6.0.1
+      Depends on vulnerable versions of @inquirer/editor
+      node_modules/@inquirer/prompts
+        @listr2/prompt-adapter-inquirer  <=2.0.17
+        Depends on vulnerable versions of @inquirer/prompts
+        node_modules/@listr2/prompt-adapter-inquirer
+
+
+webpack  5.49.0 - 5.104.0
+webpack buildHttp: allowedUris allow-list bypass via URL userinfo (@) leading to build-time SSRF behavior - https://github.com/advisories/GHSA-8fgc-7cc6-rx7x
+webpack buildHttp HttpUriPlugin allowedUris bypass via HTTP redirects → SSRF + cache persistence - https://github.com/advisories/GHSA-38r7-794h-5758
+fix available via `npm audit fix --force`
+Will install @angular-devkit/build-angular@19.2.26, which is a breaking change
+node_modules/webpack
+
+44 vulnerabilities (6 low, 10 moderate, 28 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force

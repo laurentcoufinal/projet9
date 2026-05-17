@@ -1,10 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { PersonDetailsComponent } from './person-details.component';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Person, PersonService } from '../person.service';
 import { Organization, OrganizationService } from '../organization.service';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('PersonDetailsComponent', () => {
   let component: PersonDetailsComponent;
@@ -27,22 +28,24 @@ describe('PersonDetailsComponent', () => {
     organizationService.fetchAll.and.resolveTo([]);
 
     await TestBed.configureTestingModule({
-      imports: [PersonDetailsComponent, HttpClientTestingModule, RouterTestingModule],
-      providers: [
+    imports: [PersonDetailsComponent, RouterTestingModule],
+    providers: [
         { provide: PersonService, useValue: personService },
         { provide: OrganizationService, useValue: organizationService },
         {
-          provide: ActivatedRoute,
-          useValue: {
-            snapshot: {
-              paramMap: {
-                get: (key: string) => (key === 'personId' ? 'new' : null),
-              },
+            provide: ActivatedRoute,
+            useValue: {
+                snapshot: {
+                    paramMap: {
+                        get: (key: string) => (key === 'personId' ? 'new' : null),
+                    },
+                },
             },
-          },
         },
-      ],
-    }).compileComponents();
+        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClientTesting(),
+    ]
+}).compileComponents();
 
     fixture = TestBed.createComponent(PersonDetailsComponent);
     component = fixture.componentInstance;
@@ -122,22 +125,24 @@ describe('PersonDetailsComponent existing person', () => {
     });
 
     await TestBed.configureTestingModule({
-      imports: [PersonDetailsComponent, HttpClientTestingModule, RouterTestingModule],
-      providers: [
+    imports: [PersonDetailsComponent, RouterTestingModule],
+    providers: [
         { provide: PersonService, useValue: personService },
         { provide: OrganizationService, useValue: organizationService },
         {
-          provide: ActivatedRoute,
-          useValue: {
-            snapshot: {
-              paramMap: {
-                get: () => '3',
-              },
+            provide: ActivatedRoute,
+            useValue: {
+                snapshot: {
+                    paramMap: {
+                        get: () => '3',
+                    },
+                },
             },
-          },
         },
-      ],
-    }).compileComponents();
+        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClientTesting(),
+    ]
+}).compileComponents();
 
     const fixture = TestBed.createComponent(PersonDetailsComponent);
     component = fixture.componentInstance;
