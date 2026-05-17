@@ -90,7 +90,7 @@ jobs:
           cd ../front && npm ci && npm run test:ci
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v2
+        uses: SonarSource/sonarcloud-github-action@v5
         with:
           projectBaseDir: P7-FSJA
         env:
