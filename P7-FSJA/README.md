@@ -2,154 +2,200 @@
    <img src="./front/src/favicon.png" width="192px" />
 </p>
 
-# MicroCRM (P7 - Développeur Full-Stack - Java et Angular - Mettez en œuvre l'intégration et le déploiement continu d'une application Full-Stack)
+# MicroCRM — Orion (P7 Full-Stack)
 
-MicroCRM est une application de démonstration basique ayant pour être objectif de servir de socle pour le module "P7 - Développeur Full-Stack".
-
-L'application MicroCRM est une implémentation simplifiée d'un ["CRM" (Customer Relationship Management)](https://fr.wikipedia.org/wiki/Gestion_de_la_relation_client). Les fonctionnalités sont limitées à la création, édition et la visualisations des individus liés à des organisations.
+Application CRM simplifiée (Spring Boot 3 + Angular 17) avec chaîne **CI/CD**, conteneurisation **Docker Compose** et analyse **SonarCloud**.
 
 ![Page d'accueil](./misc/screenshots/screenshot_1.png)
 ![Édition de la fiche d'un individu](./misc/screenshots/screenshot_2.png)
 
-## Code source
+## Sommaire
 
-### Organisation
+- [Organisation du code](#organisation-du-code)
+- [Démarrage local (sources)](#démarrage-local-sources)
+- [Tests](#tests)
+- [Docker & Docker Compose](#docker--docker-compose)
+- [CI/CD GitHub Actions](#cicd-github-actions)
+- [SonarCloud](#sonarcloud)
+- [Déploiement (GHCR)](#déploiement-ghcr)
+- [Documentation](#documentation)
+- [Dépannage](#dépannage)
 
-Ce [monorepo](https://en.wikipedia.org/wiki/Monorepo) contient les 2 composantes du projet "MicroCRM":
+## Organisation du code
 
-- La partie serveur (ou "backend"), en Java SpringBoot 3;
-- La partie cliente (ou "frontend"), en Angular 17.
+Ce monorepo contient :
 
-### Démarrer avec les sources
+| Répertoire | Stack |
+|------------|-------|
+| `back/` | Java 17, Spring Boot 3, Gradle, HSQLDB |
+| `front/` | Angular 17, Karma/Jasmine |
+| `misc/docker/` | Caddyfile, configuration Supervisor |
+| `.github/workflows/` (racine du dépôt) | Pipelines CI/CD |
 
-#### Serveur
+## Démarrage local (sources)
 
-##### Dépendances
+### Backend
 
-- [OpenJDK >= 17](https://openjdk.org/)
-
-##### Procédure
-
-1. Se positionner dans le répertoire `back` avec une invite de commande:
-
-   ```shell
-   cd back
-   ```
-
-2. Construire le JAR:
-
-   ```shell
-   # Sur Linux
-   ./gradlew build
-
-   # Sur Windows
-   gradlew.bat build
-   ```
-
-3. Démarrer le service:
-
-   ```shell
-   java -jar build/libs/microcrm-0.0.1-SNAPSHOT.jar
-   ```
-
-Puis ouvrir l'URL http://localhost:8080 dans votre navigateur.
-
-#### Client
-
-##### Dépendances
-
-- [NPM >= 10.2.4](https://www.npmjs.com/)
-
-##### Procédure
-
-1. Se positionner dans le répertoire `front` avec une invite de commande:
-
-   ```shell
-   cd front
-   ```
-
-2. (La première fois seulement) Installer les dépendances NodeJS:
-
-   ```shell
-   npm install
-   ```
-
-3. Démarrer le service de développement:
-
-   ```shell
-   npx @angular/cli serve
-   ```
-
-Puis ouvrir l'URL http://localhost:4200 dans votre navigateur.
-
-### Exécution des tests
-
-#### Client
-
-**Dépendances**
-
-- Google Chrome ou Chromium
-
-Dans votre terminal:
-
-```shell
-cd front
-CHROME_BIN=</path/to/google/chrome> npm test
-```
-
-#### Serveur
-
-Dans votre terminal:
+**Prérequis :** OpenJDK ≥ 17
 
 ```shell
 cd back
-./gradlew test
+chmod +x gradlew   # si nécessaire
+./gradlew build
+java -jar build/libs/microcrm-0.0.1-SNAPSHOT.jar
 ```
 
-### Images Docker
+API : http://localhost:8080
 
-#### Client
+### Frontend
 
-##### Construire l'image
+**Prérequis :** Node.js ≥ 20, npm ≥ 10
 
 ```shell
-docker build --target front -t orion-microcrm-front:latest .
+cd front
+npm install
+npx @angular/cli serve
 ```
 
-##### Exécuter l'image
+UI : http://localhost:4200
+
+## Tests
+
+### Backend
 
 ```shell
-docker run -it --rm -p 80:80 -p 443:443 orion-microcrm-front:latest
+cd back
+./gradlew test jacocoTestReport
 ```
 
-L'application sera disponible sur https://localhost.
+Rapport JaCoCo : `back/build/reports/jacoco/test/html/index.html`
 
-#### Serveur
+### Frontend
 
-##### Construire l'image
+```shell
+cd front
+npm ci
+npm run test:ci
+```
+
+En local, Chrome/Chromium doit être installé (`CHROME_BIN` si besoin).
+
+## Docker & Docker Compose
+
+### Prérequis
+
+- Docker Engine ≥ 24
+- Docker Compose v2
+
+### Stack back + front (recommandé)
+
+```shell
+# Depuis ce répertoire (P7-FSJA)
+docker compose build
+docker compose up -d
+```
+
+| Service | URL |
+|---------|-----|
+| API | http://localhost:8080/persons |
+| UI | https://localhost (Caddy, certificat auto) |
+
+```shell
+docker compose down
+```
+
+### Vérification automatisée
+
+```shell
+./scripts/verify-docker.sh
+```
+
+### Profil standalone (un seul conteneur)
+
+```shell
+docker compose --profile standalone up -d
+```
+
+### Images individuelles (sans Compose)
 
 ```shell
 docker build --target back -t orion-microcrm-back:latest .
-```
-
-##### Exécuter l'image
-
-```shell
+docker build --target front -t orion-microcrm-front:latest .
 docker run -it --rm -p 8080:8080 orion-microcrm-back:latest
+docker run -it --rm -p 80:80 -p 443:443 orion-microcrm-front:latest
 ```
 
-L'API sera disponible sur http://localhost:8080.
+## CI/CD GitHub Actions
 
-#### Tout en un
+Dépôt : https://github.com/laurentcoufinal/projet9
+
+| Workflow | Fichier | Déclencheur |
+|----------|---------|-------------|
+| **CI** | `.github/workflows/ci.yml` | Push / PR sur `main` |
+| **CD** | `.github/workflows/cd.yml` | CI réussi sur `main`, ou manuel |
+| **Nightly** | `.github/workflows/nightly.yml` | Cron 02:00 UTC, ou manuel |
+
+### Étapes CI
+
+1. Build & tests backend (Gradle + JaCoCo)
+2. Build & tests frontend (Angular + couverture LCOV)
+3. Analyse SonarCloud
+4. Build des images Docker Compose
+
+## SonarCloud
+
+### Configuration initiale (une fois)
+
+1. Créer un compte sur [SonarCloud](https://sonarcloud.io).
+2. Importer le dépôt GitHub `projet9` et créer le projet (clé suggérée : `laurentcoufinal_projet9`).
+3. Générer un token utilisateur.
+4. Dans GitHub → **Settings → Secrets and variables → Actions**, ajouter :
+   - `SONAR_TOKEN` : token SonarCloud
+
+Le fichier [`sonar-project.properties`](sonar-project.properties) définit les chemins de sources et de couverture.
+
+### Quality Gate (objectifs)
+
+- Aucune nouvelle vulnérabilité Blocker / Critical
+- Couverture backend ≥ 50 % (à affiner après le premier scan)
+- Hotspots de sécurité revus
+
+## Déploiement (GHCR)
+
+Après un push réussi sur `main`, le workflow **CD** publie :
+
+- `ghcr.io/laurentcoufinal/projet9/orion-microcrm-back:latest`
+- `ghcr.io/laurentcoufinal/projet9/orion-microcrm-front:latest`
+
+Sur une machine cible :
 
 ```shell
-docker build --target standalone -t orion-microcrm-standalone:latest .
+echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+docker pull ghcr.io/laurentcoufinal/projet9/orion-microcrm-back:latest
+docker pull ghcr.io/laurentcoufinal/projet9/orion-microcrm-front:latest
+cd P7-FSJA
+docker compose up -d
 ```
 
-##### Exécuter l'image
+## Documentation
 
-```shell
-docker run -it --rm -p 8080:8080 -p 80:80 -p 443:443 orion-microcrm-standalone:latest
-```
+| Document | Description |
+|----------|-------------|
+| [`documentation-technique.md`](documentation-technique.md) | Documentation complète (pipeline, sécurité, sauvegarde, KPI) — export PDF via Pandoc |
+| [`../cdc.md`](../cdc.md) | Cahier des charges |
+| [`../documentation techinique.md`](../documentation%20techinique.md) | Template fourni |
 
-L'application sera disponible sur https://localhost et l'API sur http://localhost:8080.
+## Dépannage
+
+| Problème | Solution |
+|----------|----------|
+| `gradlew: Permission denied` | `chmod +x back/gradlew` |
+| Karma : `No binary for ChromeHeadless` | Installer Chrome ou définir `CHROME_BIN` |
+| Front ne joint pas l’API | Vérifier que le back écoute sur `8080` ; l’URL API est dans `front/src/app/config.ts` |
+| Healthcheck front en échec | Caddy redirige HTTP→HTTPS ; tester `curl -k https://localhost` |
+| SonarCloud échoue en CI | Vérifier `SONAR_TOKEN` et la clé projet dans `sonar-project.properties` |
+| Ports déjà utilisés | `docker compose down` ou changer les mappings dans `docker-compose.yml` |
+
+## Licence / contexte
+
+Projet pédagogique OpenClassroom — module P7 DevOps / intégration continue.

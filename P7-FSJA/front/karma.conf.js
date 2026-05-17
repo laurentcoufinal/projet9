@@ -25,9 +25,13 @@ module.exports = function (config) {
       suppressAll: true, // removes the duplicated traces
     },
     coverageReporter: {
-      dir: require("path").join(__dirname, "./coverage/microcrm"),
+      dir: require("path").join(__dirname, "./coverage"),
       subdir: ".",
-      reporters: [{ type: "html" }, { type: "text-summary" }],
+      reporters: [
+        { type: "html" },
+        { type: "text-summary" },
+        { type: "lcovonly", file: "lcov.info" },
+      ],
     },
     reporters: ["progress", "kjhtml"],
     browsers: ["ChromeHeadlessNoSandbox", "ChromeHeadless", "Chrome"],

@@ -20,7 +20,7 @@ FROM alpine:3.19 as front
 COPY --from=front-build /src/dist/microcrm/browser /app/front
 COPY misc/docker/Caddyfile /app/Caddyfile
 
-RUN apk add caddy
+RUN apk add --no-cache caddy wget
 
 WORKDIR /app
 
@@ -33,11 +33,11 @@ FROM alpine:3.19 as back
 
 COPY --from=back-build /src/build/libs/microcrm-0.0.1-SNAPSHOT.jar /app/back/microcrm-0.0.1-SNAPSHOT.jar
 
-RUN apk add openjdk21-jre-headless
+RUN apk add --no-cache openjdk21-jre-headless curl
 
 WORKDIR /app
 
-EXPOSE 4200
+EXPOSE 8080
 
 CMD ["java", "-jar", "/app/back/microcrm-0.0.1-SNAPSHOT.jar"]
 

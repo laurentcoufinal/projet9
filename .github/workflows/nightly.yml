@@ -1,0 +1,131 @@
+name: Nightly
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: P7-FSJA
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+          cache-dependency-path: P7-FSJA/back/gradle/wrapper/gradle-wrapper.properties
+
+      - name: Test
+        working-directory: P7-FSJA/back
+        run: ./gradlew test jacocoTestReport --no-daemon
+
+  frontend:
+    name: Frontend tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: P7-FSJA/front/package-lock.json
+
+      - name: Set up Chrome for Karma
+        id: setup-chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Frontend tests
+        working-directory: P7-FSJA/front
+        env:
+          CHROME_BIN: ${{ steps.setup-chrome.outputs.chrome-path }}
+        run: |
+          npm ci
+          npm run test:ci
+
+  sonarcloud:
+    name: SonarCloud (nightly)
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+          cache-dependency-path: P7-FSJA/back/gradle/wrapper/gradle-wrapper.properties
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: P7-FSJA/front/package-lock.json
+
+      - name: Set up Chrome for Karma
+        id: setup-chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Prepare analysis
+        env:
+          CHROME_BIN: ${{ steps.setup-chrome.outputs.chrome-path }}
+        run: |
+          cd back && ./gradlew build test jacocoTestReport --no-daemon
+          cd ../front && npm ci && npm run test:ci
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          projectBaseDir: P7-FSJA
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  docker-smoke:
+    name: Docker Compose smoke test
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and start stack
+        working-directory: P7-FSJA
+        run: |
+          docker compose build
+          docker compose up -d
+
+      - name: Wait for backend
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8080/persons; then
+              exit 0
+            fi
+            sleep 5
+          done
+          docker compose -f P7-FSJA/docker-compose.yml logs
+          exit 1
+
+      - name: Check frontend
+        run: |
+          curl -sfL -o /dev/null http://localhost:80/ || curl -sfk -o /dev/null https://localhost:443/
+
+      - name: Tear down
+        if: always()
+        working-directory: P7-FSJA
+        run: docker compose down -v

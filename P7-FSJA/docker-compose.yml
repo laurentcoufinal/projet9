@@ -1,0 +1,44 @@
+services:
+  back:
+    build:
+      context: .
+      target: back
+    image: orion-microcrm-back:latest
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/persons"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  front:
+    build:
+      context: .
+      target: front
+    image: orion-microcrm-front:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      back:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:80/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  standalone:
+    profiles:
+      - standalone
+    build:
+      context: .
+      target: standalone
+    image: orion-microcrm-standalone:latest
+    ports:
+      - "8080:8080"
+      - "80:80"
+      - "443:443"

@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: /P7-FSJA/back
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: npm
+    directory: /P7-FSJA/front
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: docker
+    directory: /P7-FSJA
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
