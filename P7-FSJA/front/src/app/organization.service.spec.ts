@@ -3,6 +3,10 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 import { Organization, OrganizationService } from './organization.service';
 import { API_BASE_URL } from './config';
 
+async function tick(): Promise<void> {
+  await Promise.resolve();
+}
+
 describe('OrganizationService', () => {
   let service: OrganizationService;
   let httpMock: HttpTestingController;
@@ -36,6 +40,7 @@ describe('OrganizationService', () => {
     const promise = service.fetchById(2);
     const orgReq = httpMock.expectOne(`${API_BASE_URL}/organizations/2`);
     orgReq.flush({ id: 2, name: 'Orion' });
+    await tick();
     const personsReq = httpMock.expectOne(`${API_BASE_URL}/organizations/2/persons`);
     personsReq.flush({ _embedded: { persons: [{ id: 1, firstName: 'John' }] } });
     const org = await promise;
@@ -52,6 +57,7 @@ describe('OrganizationService', () => {
     const postReq = httpMock.expectOne(`${API_BASE_URL}/organizations`);
     expect(postReq.request.method).toBe('POST');
     postReq.flush({ id: 4, name: 'New Org' });
+    await tick();
     const personsReq = httpMock.expectOne(`${API_BASE_URL}/organizations/4/persons`);
     personsReq.flush({ _embedded: { persons: [] } });
     const saved = await promise;
@@ -69,6 +75,7 @@ describe('OrganizationService', () => {
     const putReq = httpMock.expectOne(`${API_BASE_URL}/organizations/3`);
     expect(putReq.request.method).toBe('PUT');
     putReq.flush(org);
+    await tick();
     const personsReq = httpMock.expectOne(`${API_BASE_URL}/organizations/3/persons`);
     personsReq.flush({ _embedded: { persons: [] } });
     await promise;

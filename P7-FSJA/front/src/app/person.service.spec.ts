@@ -3,6 +3,11 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 import { Person, PersonService } from './person.service';
 import { API_BASE_URL } from './config';
 
+/** Laisse Zone.js émettre la requête HTTP enchaînée après un flush (firstValueFrom = microtâche). */
+async function tick(): Promise<void> {
+  await Promise.resolve();
+}
+
 describe('PersonService', () => {
   let service: PersonService;
   let httpMock: HttpTestingController;
@@ -37,6 +42,7 @@ describe('PersonService', () => {
     const promise = service.fetchById(1);
     const personReq = httpMock.expectOne(`${API_BASE_URL}/persons/1`);
     personReq.flush({ id: 1, firstName: 'John', lastName: 'Doe', email: 'j@ex.com' });
+    await tick();
     const orgReq = httpMock.expectOne(`${API_BASE_URL}/persons/1/organizations`);
     orgReq.flush({ _embedded: { organizations: [{ id: 2, name: 'Orion' }] } });
     const person = await promise;
@@ -57,6 +63,7 @@ describe('PersonService', () => {
     const postReq = httpMock.expectOne(`${API_BASE_URL}/persons`);
     expect(postReq.request.method).toBe('POST');
     postReq.flush({ id: 5, ...person });
+    await tick();
     const orgReq = httpMock.expectOne(`${API_BASE_URL}/persons/5/organizations`);
     orgReq.flush({ _embedded: { organizations: [] } });
     const saved = await promise;
@@ -78,6 +85,7 @@ describe('PersonService', () => {
     const putReq = httpMock.expectOne(`${API_BASE_URL}/persons/3`);
     expect(putReq.request.method).toBe('PUT');
     putReq.flush(person);
+    await tick();
     const orgReq = httpMock.expectOne(`${API_BASE_URL}/persons/3/organizations`);
     orgReq.flush({ _embedded: { organizations: [] } });
     await promise;

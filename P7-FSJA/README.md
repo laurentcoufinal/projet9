@@ -190,7 +190,7 @@ docker compose up -d
 | Problème | Solution |
 |----------|----------|
 | `gradlew: Permission denied` | `chmod +x back/gradlew` |
-| Karma : `No binary for ChromeHeadless` | Installer Chrome ou définir `CHROME_BIN` |
+| Karma : `No binary for ChromeHeadless` | Lancer `npm run test:ci` (installe Chrome automatiquement) ou `sudo apt install chromium-browser` puis `export CHROME_BIN=/usr/bin/chromium` |
 | Front ne joint pas l’API | Vérifier que le back écoute sur `8080` ; l’URL API est dans `front/src/app/config.ts` |
 | Healthcheck front en échec | Caddy redirige HTTP→HTTPS ; tester `curl -k https://localhost` |
 | SonarCloud échoue en CI | Vérifier `SONAR_TOKEN` et la clé projet dans `sonar-project.properties` |
