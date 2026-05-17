@@ -1,87 +1,70 @@
 import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Person } from './person.service';
 import { HttpClient } from '@angular/common/http';
 import { API_BASE_URL } from './config';
+import {
+  HalEmbeddedOrganizations,
+  HalEmbeddedPersons,
+  Organization,
+  Person,
+} from './models';
+
+export type { Organization, Person } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class OrganizationService {
+  constructor(private client: HttpClient) {}
 
-  constructor(private client: HttpClient) {
+  async fetchById(id: number): Promise<Organization> {
+    const org = await firstValueFrom(
+      this.client.get<Organization>(`${API_BASE_URL}/organizations/${id}`)
+    );
+    org.persons = await this.fetchOrganizationPersons(org.id as number);
+    return org;
   }
 
-  async fetchById(id: number) {
-    const response = await this.client.get(`${API_BASE_URL}/organizations/${id}`)
-    const org = await firstValueFrom(response) as Organization
-    const persons = await this.fetchOrganizationPersons(org.id as number)
-    org.persons = persons
-    return org
+  async fetchAll(): Promise<Organization[]> {
+    const result = await firstValueFrom(
+      this.client.get<HalEmbeddedOrganizations>(`${API_BASE_URL}/organizations`)
+    );
+    return result._embedded.organizations;
   }
 
-  async fetchAll() {
-    const response = await this.client.get(`${API_BASE_URL}/organizations`)
-    const result = await firstValueFrom(response) as any
-    return result["_embedded"].organizations as Organization[]
+  async fetchOrganizationPersons(id: number): Promise<Person[]> {
+    const result = await firstValueFrom(
+      this.client.get<HalEmbeddedPersons>(`${API_BASE_URL}/organizations/${id}/persons`)
+    );
+    return result._embedded.persons;
   }
 
-  async fetchOrganizationPersons(id: number) {
-    const response = await this.client.get(`${API_BASE_URL}/organizations/${id}/persons`)
-    const result = await firstValueFrom(response) as any
-    const persons = result["_embedded"].persons as Person[]
-    return persons
+  async deleteById(id: number): Promise<void> {
+    await firstValueFrom(this.client.delete(`${API_BASE_URL}/organizations/${id}`));
   }
 
-  async deleteById(id: number) {
-    const response = await this.client.delete(`${API_BASE_URL}/organizations/${id}`)
-    await firstValueFrom(response)
-    return
+  async save(org: Organization): Promise<Organization> {
+    const payload = { name: org.name };
+
+    const saved = org.id === undefined
+      ? await firstValueFrom(this.client.post<Organization>(`${API_BASE_URL}/organizations`, payload))
+      : await firstValueFrom(this.client.put<Organization>(`${API_BASE_URL}/organizations/${org.id}`, payload));
+
+    saved.persons = await this.fetchOrganizationPersons(saved.id as number);
+    return saved;
   }
 
-  async save(org: Organization) {
-    let response;
-    if (org.id === undefined) {
-      response = await this.client.post(`${API_BASE_URL}/organizations`, {
-        name: org.name
-      })
-    } else {
-      response = await this.client.put(`${API_BASE_URL}/organizations/${org.id}`, {
-        name: org.name
-      })
-    }
-
-    org = await firstValueFrom(response) as Organization
-
-    const persons = await this.fetchOrganizationPersons(org.id as number)
-    org.persons = persons
-
-    return org
+  async addPerson(orgId: number, personId: number): Promise<void> {
+    await firstValueFrom(
+      this.client.put(
+        `${API_BASE_URL}/organizations/${orgId}/persons`,
+        `${API_BASE_URL}/persons/${personId}`,
+        { headers: { 'Content-Type': 'text/uri-list' } }
+      )
+    );
   }
 
-  async addPerson(orgId: number, personId: number) {
-    const response = await this.client.put(
-      `${API_BASE_URL}/organizations/${orgId}/persons`,
-      `${API_BASE_URL}/persons/${personId}`,
-      { headers: { 'Content-Type': 'text/uri-list' } }
-    )
-    await firstValueFrom(response)
-    return
+  async removePerson(orgId: number, personId: number): Promise<void> {
+    await firstValueFrom(
+      this.client.delete(`${API_BASE_URL}/persons/${personId}/organizations/${orgId}`)
+    );
   }
-
-  async removePerson(orgId: number, personId: number) {
-    const response = await this.client.delete(
-      `${API_BASE_URL}/persons/${personId}/organizations/${orgId}`
-    )
-    await firstValueFrom(response)
-    return
-  }
-
-}
-
-export interface Organization {
-  id?: number
-  name: string
-  createdAt: Date
-  updatedAt?: Date
-
-  persons: Person[]
 }

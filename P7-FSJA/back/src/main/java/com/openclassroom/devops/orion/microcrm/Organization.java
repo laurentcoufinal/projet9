@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.CascadeType;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -27,12 +28,12 @@ public class Organization {
     return id;
   }
 
-  @ManyToMany(cascade = CascadeType.ALL)
+  @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
   private List<Person> persons;
 
   public List<Person> addPerson(Person person) {
     if (this.persons == null) {
-      this.persons = new ArrayList<Person>();
+      this.persons = new ArrayList<>();
     }
     this.persons.add(person);
     return this.persons;
@@ -40,7 +41,7 @@ public class Organization {
 
   public List<Person> removePerson(Person person) {
     if (this.persons == null) {
-      this.persons = new ArrayList<Person>();
+      this.persons = new ArrayList<>();
     }
     this.persons.remove(person);
     return this.persons;
@@ -54,6 +55,7 @@ public class Organization {
     this.persons = persons;
   }
 
+  @NotBlank
   private String name;
 
   public String getName() {

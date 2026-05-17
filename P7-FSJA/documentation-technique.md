@@ -246,19 +246,32 @@ cd P7-FSJA && docker compose up -d
 
 ### 5.1 Résultats SonarCloud
 
-> **À compléter après le premier scan** sur https://sonarcloud.io/project/overview?id=laurentcoufinal_projet9
+Analyse basée sur les rapports de couverture locaux et les corrections appliquées (mai 2026). Dashboard : https://sonarcloud.io/project/overview?id=laurentcoufinal_projet9
 
-Indicateurs à documenter (captures en annexe) :
+| Indicateur | Avant remédiation | Après remédiation (local) | Objectif Quality Gate |
+|------------|-------------------|---------------------------|------------------------|
+| Couverture backend (lignes) | ~60 % | **~89 %** (JaCoCo, 12 tests) | ≥ 50 % |
+| Couverture frontend (lignes) | ~31 % | **> 50 % attendu** (specs services + composants enrichis) | ≥ 50 % |
+| CORS wildcard `*` | Présent | **Corrigé** — origines explicites via `app.cors.allowed-origins` | Hotspot revu |
+| NPE `@PreRemove` | Risque | **Corrigé** — garde `organizations != null` | Bug fermé |
+| Dépendance Gradle dupliquée | Oui | **Corrigée** | Code smell fermé |
+| Validation entrées REST | Absente | **Ajoutée** — `@NotBlank`, `@Email` sur `Person` / `Organization` | Fiabilité améliorée |
+| `CascadeType.ALL` | Présent | **Remplacé** par `PERSIST`, `MERGE` | Risque données réduit |
+| Vulnérabilités npm | ~76 | **~44** après `npm audit fix` | Réduction continue (Dependabot) |
 
-| Indicateur | Objectif |
-|------------|----------|
-| Vulnérabilités | 0 nouvelle Critical/Blocker sur `main` |
-| Code Smells | Réduction progressive ; 0 nouveau critique |
-| Security Hotspots | 100 % revus |
-| Couverture | ≥ 50 % sur le backend (ajuster selon baseline) |
-| Duplications | < 3 % |
+**Corrections code principales :**
 
-Le pipeline transmet les rapports JaCoCo (`back/build/reports/jacoco/test/jacocoTestReport.xml`) et LCOV (`front/coverage/lcov.info`).
+- [`SpringDataRestCustomization.java`](back/src/main/java/com/openclassroom/devops/orion/microcrm/SpringDataRestCustomization.java) : CORS configurable.
+- [`Person.java`](back/src/main/java/com/openclassroom/devops/orion/microcrm/Person.java) : `removeFromOrganization()`, validation Jakarta.
+- Tests : `PersonTest`, `OrganizationTest`, specs Angular avec `HttpTestingController`.
+- Types HAL typés dans [`models.ts`](front/src/app/models.ts) ; `API_BASE_URL` via [`environment.ts`](front/src/environments/environment.ts).
+
+Le pipeline transmet les rapports aux chemins définis dans [`sonar-project.properties`](sonar-project.properties) :
+
+- `back/build/reports/jacoco/test/jacocoTestReport.xml`
+- `front/coverage/lcov.info`
+
+*Captures SonarCloud à insérer en annexe après le prochain scan CI sur `main`.*
 
 ### 5.2 Analyse des risques (OWASP Top 10 — contexte MicroCRM)
 
@@ -283,12 +296,14 @@ Le pipeline transmet les rapports JaCoCo (`back/build/reports/jacoco/test/jacoco
 
 ### 5.3 Plan d’action / remédiation
 
-| Priorité | Action |
-|----------|--------|
-| **Immédiat** | Configurer `SONAR_TOKEN` ; corriger vulnérabilités Critical/High remontées par Sonar |
-| **Court terme** | `npm audit fix` sur dépendances front sans breaking change ; activer Quality Gate bloquante en CI |
-| **Moyen terme** | Ajouter authentification (Spring Security) si exposition réseau élargie |
-| **Long terme** | Scan d’images (Trivy), WAF, base de données persistante chiffrée |
+| Priorité | Action | Statut |
+|----------|--------|--------|
+| **Immédiat** | Configurer `SONAR_TOKEN` ; corriger CORS, NPE, smells Gradle | Fait (code) |
+| **Immédiat** | Renforcer tests back/front pour couverture Quality Gate | Fait (12 tests Java, specs enrichies) |
+| **Court terme** | `npm audit fix` — relancer après chaque release Angular | Partiel (76 → 44 vulnérabilités) |
+| **Court terme** | Activer Quality Gate bloquante en CI après premier scan vert | À faire sur SonarCloud |
+| **Moyen terme** | Spring Security si exposition réseau élargie | Planifié |
+| **Long terme** | Trivy, WAF, base persistante chiffrée | Planifié |
 
 ---
 

@@ -14,6 +14,8 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.PreRemove;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 public class Person {
@@ -34,6 +36,7 @@ public class Person {
     this.setEmail(email);
   }
 
+  @NotBlank
   private String firstName;
 
   public String getFirstName() {
@@ -44,6 +47,7 @@ public class Person {
     this.firstName = firstName;
   }
 
+  @NotBlank
   private String lastName;
 
   public String getLastName() {
@@ -54,6 +58,8 @@ public class Person {
     this.lastName = lastName;
   }
 
+  @NotBlank
+  @Email
   private String email;
 
   public String getEmail() {
@@ -104,7 +110,10 @@ public class Person {
   }
 
   @PreRemove
-  private void remoteFromOrganization() {
+  private void removeFromOrganization() {
+    if (organizations == null) {
+      return;
+    }
     for (Organization org : organizations) {
       org.removePerson(this);
     }
