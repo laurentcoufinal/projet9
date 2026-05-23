@@ -30,7 +30,7 @@ export class PersonDetailsComponent implements OnInit {
   isNew: boolean = false;
 
   constructor(private route: ActivatedRoute, private personService: PersonService, private organizationService: OrganizationService, private router: Router) {
-    this.organizationService.fetchAll().then(orgs => this.organizations = orgs)
+    this.organizationService.fetchAll(crypto.randomUUID()).then(orgs => this.organizations = orgs)
   }
 
   ngOnInit(): void {
@@ -41,7 +41,7 @@ export class PersonDetailsComponent implements OnInit {
       this.isNew = true
     } else if (typeof personIdParam === 'string') {
       const personId = parseInt(personIdParam)
-      this.personService.fetchById(personId).then(p => {
+      this.personService.fetchById(personId, crypto.randomUUID()).then(p => {
         this.person = p
         this.isNew = false
       })
@@ -49,9 +49,10 @@ export class PersonDetailsComponent implements OnInit {
   }
 
   savePerson() {
+    const requestId = crypto.randomUUID();
     this.personService.save({
       ...this.person
-    }).then(p => {
+    }, requestId).then(p => {
       this.person = p
       if (this.isNew) {
         this.router.navigate(["persons", p.id])
@@ -61,26 +62,29 @@ export class PersonDetailsComponent implements OnInit {
 
   deletePerson() {
     if (this.person.id === undefined) return
-    this.personService.deleteById(this.person.id).then(() => {
+    const requestId = crypto.randomUUID();
+    this.personService.deleteById(this.person.id, requestId).then(() => {
       this.router.navigate([""])
     })
   }
 
   addSelectedOrganization() {
     if (this.selectedOrganization?.id === undefined || this.person.id === undefined) return
-    this.organizationService.addPerson(this.selectedOrganization.id, this.person.id)
-    this.refresh()
+    const requestId = crypto.randomUUID();
+    this.organizationService.addPerson(this.selectedOrganization.id, this.person.id, requestId)
+      .then(() => this.refresh(requestId))
   }
 
   removeOrganization(org: Organization) {
     if (org?.id === undefined || this.person.id === undefined) return
-    this.organizationService.removePerson(org.id, this.person.id)
-    this.refresh()
+    const requestId = crypto.randomUUID();
+    this.organizationService.removePerson(org.id, this.person.id, requestId)
+      .then(() => this.refresh(requestId))
   }
 
-  refresh() {
+  refresh(requestId: string = crypto.randomUUID()) {
     if (this.person.id === undefined) return
-    this.personService.fetchById(this.person.id).then(p => {
+    this.personService.fetchById(this.person.id, requestId).then(p => {
       this.person = p
       this.isNew = false
     })

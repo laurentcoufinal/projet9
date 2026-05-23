@@ -14,6 +14,7 @@ Application CRM simplifiée (Spring Boot 3 + Angular 18) avec chaîne **CI/CD**,
 - [Organisation du code](#organisation-du-code)
 - [Démarrage local (sources)](#démarrage-local-sources)
 - [Tests](#tests)
+- [Observabilité (OpenSearch)](#observabilité-opensearch)
 - [Docker & Docker Compose](#docker--docker-compose)
 - [CI/CD GitHub Actions](#cicd-github-actions)
 - [SonarCloud](#sonarcloud)
@@ -79,6 +80,40 @@ npm run test:ci
 ```
 
 En local, Chrome/Chromium doit être installé (`CHROME_BIN` si besoin).
+
+## Observabilité (OpenSearch)
+
+Stack OpenSearch **indépendante** de MicroCRM : [`docker-compose-opensearch.yml`](../docker-compose-opensearch.yml) à la racine du dépôt.
+
+### Prérequis
+
+1. Copier [`.env.example`](../.env.example) vers `.env` à la racine (mot de passe admin OpenSearch + variables `OPENSEARCH_*`).
+2. Définir `OPENSEARCH_PASSWORD` avec la **même valeur** que `OPENSEARCH_INITIAL_ADMIN_PASSWORD`.
+
+### Démarrage
+
+```shell
+# Racine du dépôt — cluster OpenSearch (node1 + node2) + Dashboards
+docker compose -f docker-compose-opensearch.yml up -d
+
+# Puis l'application MicroCRM
+cd P7-FSJA
+docker compose up -d
+```
+
+| Service | URL |
+|---------|-----|
+| OpenSearch API (node1) | https://localhost:9200 |
+| OpenSearch Dashboards | http://localhost:5601 (utilisateur `admin`) |
+| Index des défauts | `microcrm-defects` |
+
+### Traçage des requêtes
+
+- Le front Angular génère un **UUID par requête HTTP** et l'envoie dans le header `X-Request-Id`.
+- Le backend le reprend dans les logs (`%X{requestId}`) et l'associe aux erreurs indexées dans OpenSearch.
+- Dans Dashboards : rechercher par champ `requestId` pour corréler une action UI et un défaut backend.
+
+En développement local (`./gradlew bootRun`), le back cible `https://localhost:9200`. Depuis le conteneur `back`, la cible est `host.docker.internal:9200`.
 
 ## Docker & Docker Compose
 

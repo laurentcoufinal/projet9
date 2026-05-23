@@ -4,6 +4,16 @@ services:
       context: .
       target: back
     image: orion-microcrm-back:latest
+    env_file:
+      - ../.env
+    environment:
+      OPENSEARCH_HOST: host.docker.internal
+      OPENSEARCH_PORT: "9200"
+      OPENSEARCH_USERNAME: admin
+      OPENSEARCH_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      OPENSEARCH_ENABLED: "true"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "8080:8080"
     healthcheck:

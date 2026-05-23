@@ -34,7 +34,7 @@ export class OrganizationDetailsComponent implements OnInit {
       this.isNew = true
     } else if (typeof orgIdParam === 'string') {
       const orgId = parseInt(orgIdParam)
-      this.organizationService.fetchById(orgId).then(org => {
+      this.organizationService.fetchById(orgId, crypto.randomUUID()).then(org => {
         this.org = org
         this.isNew = false
       })
@@ -43,9 +43,10 @@ export class OrganizationDetailsComponent implements OnInit {
   }
 
   saveOrg() {
+    const requestId = crypto.randomUUID();
     this.organizationService.save({
       ...this.org
-    }).then(o => {
+    }, requestId).then(o => {
       this.org = o
       if (this.isNew) {
         this.router.navigate(["organizations", o.id])
@@ -55,7 +56,8 @@ export class OrganizationDetailsComponent implements OnInit {
 
   deleteOrg() {
     if (this.org.id === undefined) return
-    this.organizationService.deleteById(this.org.id).then(() => {
+    const requestId = crypto.randomUUID();
+    this.organizationService.deleteById(this.org.id, requestId).then(() => {
       this.router.navigate([""])
     })
   }

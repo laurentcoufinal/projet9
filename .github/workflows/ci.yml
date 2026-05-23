@@ -36,6 +36,8 @@ jobs:
 
       - name: Build and test
         working-directory: P7-FSJA/back
+        env:
+          OPENSEARCH_ENABLED: "false"
         run: ./gradlew build test jacocoTestReport --no-daemon
 
       - name: Upload JaCoCo report
@@ -113,6 +115,8 @@ jobs:
 
       - name: Build backend (for binaries)
         working-directory: P7-FSJA/back
+        env:
+          OPENSEARCH_ENABLED: "false"
         run: ./gradlew build test jacocoTestReport --no-daemon
 
       - name: Set up Chrome for Karma

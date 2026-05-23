@@ -2,7 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Person, PersonService } from './person.service';
 import { API_BASE_URL } from './config';
-import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { requestIdInterceptor } from './request-id.interceptor';
 
 /** Laisse Zone.js émettre la requête HTTP enchaînée après un flush (firstValueFrom = microtâche). */
 async function tick(): Promise<void> {
@@ -16,7 +17,10 @@ describe('PersonService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
     imports: [],
-    providers: [provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
+    providers: [
+      provideHttpClient(withInterceptors([requestIdInterceptor])),
+      provideHttpClientTesting(),
+    ],
 });
     service = TestBed.inject(PersonService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -31,9 +35,10 @@ describe('PersonService', () => {
   });
 
   it('fetchAll should return persons from HAL payload', async () => {
-    const promise = service.fetchAll();
+    const promise = service.fetchAll('test-request-id');
     const req = httpMock.expectOne(`${API_BASE_URL}/persons`);
     expect(req.request.method).toBe('GET');
+    expect(req.request.headers.get('X-Request-Id')).toBe('test-request-id');
     req.flush({ _embedded: { persons: [{ id: 1, firstName: 'John' }] } });
     const persons = await promise;
     expect(persons.length).toBe(1);

@@ -19,8 +19,9 @@ export class MainDashboardComponent implements OnInit {
 
 
   ngOnInit(): void {
-    this.personService.fetchAll().then(persons => this.persons = persons);
-    this.organizationService.fetchAll().then(orgs => this.organizations = orgs);
+    const requestId = crypto.randomUUID();
+    this.personService.fetchAll(requestId).then(persons => this.persons = persons);
+    this.organizationService.fetchAll(requestId).then(orgs => this.organizations = orgs);
   }
 }
 
