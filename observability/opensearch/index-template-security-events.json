@@ -1,0 +1,33 @@
+{
+  "index_patterns": ["microcrm-security-events*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 1
+    },
+    "mappings": {
+      "properties": {
+        "timestamp": { "type": "date" },
+        "requestId": { "type": "keyword" },
+        "eventCategory": { "type": "keyword" },
+        "eventType": { "type": "keyword" },
+        "clientIp": { "type": "ip", "ignore_malformed": true },
+        "method": { "type": "keyword" },
+        "path": { "type": "keyword" },
+        "status": { "type": "integer" },
+        "durationMs": { "type": "long" },
+        "userAgent": { "type": "text", "fields": { "keyword": { "type": "keyword", "ignore_above": 512 } } },
+        "outcome": { "type": "keyword" },
+        "sensitive": { "type": "boolean" },
+        "requestIdProvided": { "type": "boolean" },
+        "event_type": { "type": "keyword" },
+        "event_category": { "type": "keyword" },
+        "source": { "type": "keyword" },
+        "ci_event": { "type": "keyword" },
+        "workflow": { "type": "keyword" },
+        "job": { "type": "keyword" },
+        "conclusion": { "type": "keyword" }
+      }
+    }
+  }
+}

@@ -13,6 +13,7 @@ services:
       - bootstrap.memory_lock=true
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
       - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      - plugins.security.audit.type=internal_opensearch
     ulimits:
       memlock:
         soft: -1
@@ -50,6 +51,7 @@ services:
       - bootstrap.memory_lock=true
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
       - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      - plugins.security.audit.type=internal_opensearch
     ulimits:
       memlock:
         soft: -1
@@ -68,13 +70,36 @@ services:
     env_file: .env
     depends_on:
       opensearch-node1:
-        condition: service_healthy
+        condition: service_started
     ports:
       - "5601:5601"
     environment:
       OPENSEARCH_HOSTS: '["https://opensearch-node1:9200","https://opensearch-node2:9200"]'
       OPENSEARCH_USERNAME: admin
       OPENSEARCH_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+    networks:
+      - opensearch-net
+
+  fluent-bit:
+    image: fluent/fluent-bit:3.2
+    container_name: fluent-bit
+    env_file: .env
+    environment:
+      OPENSEARCH_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      FLUENT_BIT_OPENSEARCH_INDEX: ${FLUENT_BIT_OPENSEARCH_INDEX:-microcrm-server-state}
+      FLUENT_BIT_SECURITY_INDEX: ${FLUENT_BIT_SECURITY_INDEX:-microcrm-security-events}
+    depends_on:
+      opensearch-node1:
+        condition: service_started
+    ports:
+      - "24224:24224"
+    volumes:
+      - ./observability/fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      - ./observability/fluent-bit/parsers.conf:/fluent-bit/etc/parsers.conf:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - opensearch-net
 

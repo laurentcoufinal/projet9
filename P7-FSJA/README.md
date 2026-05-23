@@ -92,20 +92,57 @@ Stack OpenSearch **indépendante** de MicroCRM : [`docker-compose-opensearch.yml
 
 ### Démarrage
 
+Lancer **d'abord** la stack observabilité (Fluent Bit doit écouter sur le port `24224` avant MicroCRM) :
+
 ```shell
-# Racine du dépôt — cluster OpenSearch (node1 + node2) + Dashboards
+# Racine du dépôt — OpenSearch + Dashboards + Fluent Bit
 docker compose -f docker-compose-opensearch.yml up -d
 
 # Puis l'application MicroCRM
 cd P7-FSJA
-docker compose up -d
+docker compose --env-file ../.env up -d
+
+# (Optionnel) Logs conteneur vers Fluent Bit — uniquement si fluent-bit est déjà Up sur 24224 :
+# docker compose -f docker-compose.yml -f docker-compose.fluent-logs.yml --env-file ../.env up -d
 ```
 
 | Service | URL |
 |---------|-----|
 | OpenSearch API (node1) | https://localhost:9200 |
 | OpenSearch Dashboards | http://localhost:5601 (utilisateur `admin`) |
-| Index des défauts | `microcrm-defects` |
+| Fluent Bit (forward) | `host:24224` |
+
+Par défaut, les logs conteneur restent en **json-file** (arrêt Docker fiable). Le driver **fluentd** peut bloquer `docker stop` si Fluent Bit n'écoute pas sur `24224` — utiliser `docker-compose.fluent-logs.yml` seulement avec la stack observabilité démarrée. Sur Linux/WSL : `FLUENTD_ADDRESS=172.17.0.1:24224` dans `.env`.
+
+### Index OpenSearch
+
+| Index | Contenu | Source |
+|-------|---------|--------|
+| `microcrm-defects` | Erreurs applicatives 4xx/5xx + `requestId` | Client Java (`OpenSearchDefectLogger`) |
+| `microcrm-server-state` | Santé (back Actuator, front, cluster OS), logs conteneurs, CPU/RAM/disque host | [Fluent Bit](../observability/fluent-bit/fluent-bit.conf) |
+| `microcrm-security-events` | Journal d'accès API (IP, path, status, `requestId`), événements CI | `SecurityAccessLogFilter` + Fluent Bit + [index-ci-event.sh](../observability/opensearch/index-ci-event.sh) |
+| `security-auditlog-*` | Audit admin OpenSearch | Plugin Security (activé dans le compose) |
+
+### SIEM (sécurité)
+
+Après démarrage de la stack OpenSearch :
+
+```shell
+export OPENSEARCH_PASSWORD="$(grep OPENSEARCH_INITIAL_ADMIN_PASSWORD ../.env | cut -d= -f2-)"
+chmod +x ../observability/opensearch/setup-siem.sh
+../observability/opensearch/setup-siem.sh
+```
+
+- Dashboard **MicroCRM SOC** : http://localhost:5601
+- Alertes : spike 5xx/4xx, health down, DELETE massifs (voir [observability/opensearch/README.md](../observability/opensearch/README.md))
+- Doc détaillée : [information logge.md](../information%20logge.md) à la racine du dépôt
+
+Vérification rapide :
+
+```shell
+curl -ks -u "admin:VOTRE_MOT_DE_PASSE" \
+  "https://localhost:9200/microcrm-server-state/_search?size=3&pretty"
+```
 
 ### Traçage des requêtes
 

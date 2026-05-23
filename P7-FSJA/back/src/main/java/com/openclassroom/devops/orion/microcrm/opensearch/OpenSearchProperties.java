@@ -11,6 +11,8 @@ public class OpenSearchProperties {
     private String username = "admin";
     private String password = "";
     private String indexDefects = "microcrm-defects";
+    private String indexSecurityEvents = "microcrm-security-events";
+    private boolean securityAccessLogEnabled = true;
 
     public boolean isEnabled() {
         return enabled;
@@ -58,5 +60,21 @@ public class OpenSearchProperties {
 
     public void setIndexDefects(String indexDefects) {
         this.indexDefects = indexDefects;
+    }
+
+    public String getIndexSecurityEvents() {
+        return indexSecurityEvents;
+    }
+
+    public void setIndexSecurityEvents(String indexSecurityEvents) {
+        this.indexSecurityEvents = indexSecurityEvents;
+    }
+
+    public boolean isSecurityAccessLogEnabled() {
+        return securityAccessLogEnabled;
+    }
+
+    public void setSecurityAccessLogEnabled(boolean securityAccessLogEnabled) {
+        this.securityAccessLogEnabled = securityAccessLogEnabled;
     }
 }

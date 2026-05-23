@@ -1,0 +1,24 @@
+# Optionnel : logs conteneur → Fluent Bit (port 24224).
+# N'utiliser QUE si Fluent Bit tourne déjà :
+#   docker compose -f ../docker-compose-opensearch.yml up -d fluent-bit
+# Puis :
+#   docker compose -f docker-compose.yml -f docker-compose.fluent-logs.yml up -d
+#
+# Sans Fluent Bit, le driver fluentd bloque docker stop/kill.
+
+services:
+  back:
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: ${FLUENTD_ADDRESS:-172.17.0.1:24224}
+        fluentd-async-connect: "true"
+        tag: microcrm.{{.Name}}
+
+  front:
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: ${FLUENTD_ADDRESS:-172.17.0.1:24224}
+        fluentd-async-connect: "true"
+        tag: microcrm.{{.Name}}

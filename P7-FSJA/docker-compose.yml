@@ -1,3 +1,11 @@
+# json-file par défaut : arrêt fiable (docker stop/kill).
+# Logs vers Fluent Bit : voir docker-compose.fluent-logs.yml (Fluent Bit doit être up).
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   back:
     build:
@@ -12,8 +20,10 @@ services:
       OPENSEARCH_USERNAME: admin
       OPENSEARCH_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
       OPENSEARCH_ENABLED: "true"
+      OPENSEARCH_SECURITY_ACCESS_LOG: "true"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    logging: *default-logging
     ports:
       - "8080:8080"
     healthcheck:
@@ -28,6 +38,9 @@ services:
       context: .
       target: front
     image: orion-microcrm-front:latest
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    logging: *default-logging
     ports:
       - "80:80"
       - "443:443"

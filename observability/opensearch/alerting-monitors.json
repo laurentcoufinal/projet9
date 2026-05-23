@@ -1,0 +1,168 @@
+[
+  {
+    "name": "microcrm-defects-high-5xx",
+    "type": "monitor",
+    "monitor_type": "bucket_level_monitor",
+    "enabled": true,
+    "schedule": { "period": { "unit": "MINUTES", "interval": 5 } },
+    "inputs": [
+      {
+        "search": {
+          "indices": ["microcrm-defects"],
+          "query": {
+            "size": 0,
+            "query": {
+              "bool": {
+                "filter": [
+                  { "range": { "timestamp": { "gte": "now-5m", "lte": "now" } } },
+                  { "range": { "status": { "gte": 500 } } }
+                ]
+              }
+            },
+            "aggs": {
+              "error_count": { "value_count": { "field": "_id" } }
+            }
+          }
+        }
+      }
+    ],
+    "triggers": [
+      {
+        "name": "spike-5xx",
+        "severity": "1",
+        "condition": {
+          "script": {
+            "source": "ctx.results[0].aggregations.error_count.value > 10",
+            "lang": "painless"
+          }
+        },
+        "actions": []
+      }
+    ]
+  },
+  {
+    "name": "microcrm-defects-high-4xx",
+    "type": "monitor",
+    "monitor_type": "bucket_level_monitor",
+    "enabled": true,
+    "schedule": { "period": { "unit": "MINUTES", "interval": 5 } },
+    "inputs": [
+      {
+        "search": {
+          "indices": ["microcrm-defects"],
+          "query": {
+            "size": 0,
+            "query": {
+              "bool": {
+                "filter": [
+                  { "range": { "timestamp": { "gte": "now-5m", "lte": "now" } } },
+                  { "range": { "status": { "gte": 400, "lt": 500 } } }
+                ]
+              }
+            },
+            "aggs": {
+              "error_count": { "value_count": { "field": "_id" } }
+            }
+          }
+        }
+      }
+    ],
+    "triggers": [
+      {
+        "name": "spike-4xx",
+        "severity": "2",
+        "condition": {
+          "script": {
+            "source": "ctx.results[0].aggregations.error_count.value > 50",
+            "lang": "painless"
+          }
+        },
+        "actions": []
+      }
+    ]
+  },
+  {
+    "name": "microcrm-server-health-down",
+    "type": "monitor",
+    "monitor_type": "bucket_level_monitor",
+    "enabled": true,
+    "schedule": { "period": { "unit": "MINUTES", "interval": 2 } },
+    "inputs": [
+      {
+        "search": {
+          "indices": ["microcrm-server-state"],
+          "query": {
+            "size": 0,
+            "query": {
+              "bool": {
+                "filter": [
+                  { "range": { "@timestamp": { "gte": "now-2m", "lte": "now" } } },
+                  { "term": { "event_type": "health" } },
+                  { "term": { "status": "down" } }
+                ]
+              }
+            },
+            "aggs": {
+              "down_count": { "value_count": { "field": "_id" } }
+            }
+          }
+        }
+      }
+    ],
+    "triggers": [
+      {
+        "name": "service-down",
+        "severity": "1",
+        "condition": {
+          "script": {
+            "source": "ctx.results[0].aggregations.down_count.value >= 1",
+            "lang": "painless"
+          }
+        },
+        "actions": []
+      }
+    ]
+  },
+  {
+    "name": "microcrm-security-mass-delete",
+    "type": "monitor",
+    "monitor_type": "bucket_level_monitor",
+    "enabled": true,
+    "schedule": { "period": { "unit": "MINUTES", "interval": 10 } },
+    "inputs": [
+      {
+        "search": {
+          "indices": ["microcrm-security-events"],
+          "query": {
+            "size": 0,
+            "query": {
+              "bool": {
+                "filter": [
+                  { "range": { "timestamp": { "gte": "now-10m", "lte": "now" } } },
+                  { "term": { "method": "DELETE" } },
+                  { "term": { "outcome": "success" } }
+                ]
+              }
+            },
+            "aggs": {
+              "delete_count": { "value_count": { "field": "_id" } }
+            }
+          }
+        }
+      }
+    ],
+    "triggers": [
+      {
+        "name": "mass-delete",
+        "severity": "1",
+        "condition": {
+          "script": {
+            "source": "ctx.results[0].aggregations.delete_count.value > 20",
+            "lang": "painless"
+          }
+        },
+        "actions": []
+      }
+    ]
+  }
+]

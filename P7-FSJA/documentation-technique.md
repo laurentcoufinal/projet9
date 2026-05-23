@@ -290,7 +290,7 @@ Le pipeline transmet les rapports aux chemins définis dans [`sonar-project.prop
 | A06 — Composants vulnérables | **Moyen/Élevé** | npm audit signale des vulnérabilités ; Dependabot hebdomadaire |
 | A07 — Identification / auth | N/A (hors périmètre actuel) | — |
 | A08 — Intégrité logicielle | Faible | CI sur GitHub, images signées par registre GHCR |
-| A09 — Journalisation | Faible | Logs stdout conteneurs ; pas de SIEM |
+| A09 — Journalisation | Moyen | Index `microcrm-defects`, `microcrm-security-events`, `microcrm-server-state` ; dashboard SOC, Alerting, Security Analytics ; audit OpenSearch (`security-auditlog-*`) |
 | A10 — SSRF | Faible | Pas d’appels HTTP sortants dynamiques côté API |
 
 **Risques pipeline :**

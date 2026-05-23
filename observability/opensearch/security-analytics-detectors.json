@@ -1,0 +1,77 @@
+[
+  {
+    "name": "microcrm-detector-5xx-spike",
+    "detector_type": "bucket_level",
+    "enabled": true,
+    "schedule": { "period": { "interval": 5, "unit": "MINUTES" } },
+    "inputs": [
+      {
+        "detector_input": {
+          "description": "Spike erreurs serveur 5xx",
+          "indices": ["microcrm-defects"],
+          "pre_packaged_data_sources": [],
+          "custom_alerts": []
+        }
+      }
+    ],
+    "triggers": [
+      {
+        "name": "5xx-spike-trigger",
+        "severity": "high",
+        "bucket_level_trigger": {
+          "name": "5xx-spike-trigger"
+        }
+      }
+    ]
+  },
+  {
+    "name": "microcrm-detector-4xx-by-path",
+    "detector_type": "bucket_level",
+    "enabled": true,
+    "schedule": { "period": { "interval": 5, "unit": "MINUTES" } },
+    "inputs": [
+      {
+        "detector_input": {
+          "description": "Volume élevé 4xx par endpoint",
+          "indices": ["microcrm-defects"],
+          "pre_packaged_data_sources": [],
+          "custom_alerts": []
+        }
+      }
+    ],
+    "triggers": [
+      {
+        "name": "4xx-path-trigger",
+        "severity": "medium",
+        "bucket_level_trigger": {
+          "name": "4xx-path-trigger"
+        }
+      }
+    ]
+  },
+  {
+    "name": "microcrm-detector-ip-volume",
+    "detector_type": "bucket_level",
+    "enabled": true,
+    "schedule": { "period": { "interval": 5, "unit": "MINUTES" } },
+    "inputs": [
+      {
+        "detector_input": {
+          "description": "Volume anormal par IP cliente",
+          "indices": ["microcrm-security-events"],
+          "pre_packaged_data_sources": [],
+          "custom_alerts": []
+        }
+      }
+    ],
+    "triggers": [
+      {
+        "name": "ip-volume-trigger",
+        "severity": "medium",
+        "bucket_level_trigger": {
+          "name": "ip-volume-trigger"
+        }
+      }
+    ]
+  }
+]

@@ -139,6 +139,21 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
+      - name: Index CI security event (Sonar)
+        if: always()
+        continue-on-error: true
+        working-directory: .
+        env:
+          OPENSEARCH_URL: ${{ vars.OPENSEARCH_URL }}
+          OPENSEARCH_PASSWORD: ${{ secrets.OPENSEARCH_PASSWORD }}
+          GITHUB_WORKFLOW: ${{ github.workflow }}
+          GITHUB_JOB: sonarcloud
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          CI_CONCLUSION: ${{ job.status }}
+        run: |
+          chmod +x observability/opensearch/index-ci-event.sh
+          ./observability/opensearch/index-ci-event.sh sonar.quality_gate "${CI_CONCLUSION:-unknown}"
+
   docker:
     name: Docker — build images
     runs-on: ubuntu-latest
@@ -152,3 +167,18 @@ jobs:
       - name: Build with Docker Compose
         working-directory: P7-FSJA
         run: docker compose build
+
+      - name: Index CI security event (Docker build)
+        if: always()
+        continue-on-error: true
+        working-directory: .
+        env:
+          OPENSEARCH_URL: ${{ vars.OPENSEARCH_URL }}
+          OPENSEARCH_PASSWORD: ${{ secrets.OPENSEARCH_PASSWORD }}
+          GITHUB_WORKFLOW: ${{ github.workflow }}
+          GITHUB_JOB: docker
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          CI_CONCLUSION: ${{ job.status }}
+        run: |
+          chmod +x observability/opensearch/index-ci-event.sh
+          ./observability/opensearch/index-ci-event.sh docker.build "${CI_CONCLUSION:-unknown}"
