@@ -216,11 +216,13 @@ cd P7-FSJA && docker compose up -d
 
 | Type | Outil | Périmètre |
 |------|-------|-----------|
+| Spécification BDD (Gherkin) | Document de référence | [definition_test.md](definition_test.md) — scénarios `@existant` / `@a_implementer`, traçabilité JUnit/Karma |
 | Unitaires / intégration backend | JUnit 5, Spring Boot Test | `MicroCRMApplicationTests`, `PersonRepositoryIntegrationTest` |
 | Unitaires frontend | Karma, Jasmine, ChromeHeadlessNoSandbox | Composants et services Angular |
 | Couverture | JaCoCo (Java), karma-coverage LCOV (TS) | Alimente SonarCloud |
 | Qualité / sécurité statique | SonarCloud | Code smells, vulnérabilités, hotspots |
 | Smoke infrastructure | `curl` sur stack Docker Compose | Disponibilité API et UI |
+| API REST / E2E (cible) | REST Assured, Playwright (à planifier) | Voir scénarios `@a_implementer` dans [definition_test.md](definition_test.md) |
 
 ### 4.2 Fréquence d’exécution
 
