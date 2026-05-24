@@ -197,6 +197,166 @@ Fonctionnalité: Démarrage de l'application
 
 ---
 
+## 4.1 Infrastructure web, exceptions et observabilité (OpenSearch)
+
+Objectif : couverture SonarCloud **≥ 80 %** sur le backend Java (JaCoCo lignes). Les scénarios ci-dessous complètent la pyramide au-dessus du domaine et de la persistance.
+
+```gherkin
+@existant @unite
+Fonctionnalité: Corrélation des requêtes HTTP (X-Request-Id)
+  En tant qu'opérateur support
+  Je veux tracer chaque requête API par un identifiant unique
+  Afin de corréler logs, défauts et événements de sécurité
+
+  @WEB-REQ-01
+  Scénario: Conservation d'un X-Request-Id entrant
+    Étant donné une requête HTTP avec l'en-tête X-Request-Id "incoming-id"
+    Quand le filtre RequestIdFilter traite la requête
+    Alors la réponse expose le même X-Request-Id
+    Et l'attribut de requête requestId vaut "incoming-id"
+    # Réf: RequestIdFilterTest.shouldPreserveIncomingRequestId
+
+  @WEB-REQ-02
+  Scénario: Génération d'un X-Request-Id manquant
+    Étant donné une requête HTTP sans X-Request-Id
+    Quand le filtre RequestIdFilter traite la requête
+    Alors la réponse contient un X-Request-Id non vide
+    Et l'attribut de requête requestId correspond à cet identifiant
+    # Réf: RequestIdFilterTest.shouldGenerateRequestIdWhenMissing
+```
+
+```gherkin
+@existant @unite
+Fonctionnalité: Gestion centralisée des erreurs API
+  En tant que consommateur de l'API REST
+  Je veux des réponses JSON homogènes avec requestId
+  Afin de diagnostiquer les incidents côté support
+
+  @WEB-EXC-01
+  Scénario: Erreur de validation Bean Validation (400)
+    Étant donné une MethodArgumentNotValidException avec erreur sur le champ email
+    Quand le GlobalExceptionHandler traite l'exception
+    Alors le code HTTP est 400
+    Et le corps contient message et requestId
+    Et un défaut est indexé dans OpenSearch si le logger est disponible
+    # Réf: GlobalExceptionHandlerTest.handleValidation_shouldReturnBadRequestWithFieldErrors
+
+  @WEB-EXC-02
+  Scénario: Violation de contrainte (400)
+    Étant donné une ConstraintViolationException sur email
+    Quand le handler traite l'exception
+    Alors le code HTTP est 400
+    # Réf: GlobalExceptionHandlerTest.handleConstraintViolation_shouldReturnBadRequest
+
+  @WEB-EXC-03
+  Scénario: Violation d'intégrité des données (409)
+    Étant donné une DataIntegrityViolationException
+    Quand le handler traite l'exception
+    Alors le code HTTP est 409
+    Et le message est "Data integrity violation"
+    # Réf: GlobalExceptionHandlerTest.handleDataIntegrity_shouldReturnConflict
+
+  @WEB-EXC-04
+  Scénario: Erreur interne non gérée (500)
+    Étant donné une Exception générique sans requestId connu
+    Quand le handler traite l'exception
+    Alors le code HTTP est 500
+    Et requestId vaut "unknown"
+    # Réf: GlobalExceptionHandlerTest.handleGeneric_shouldReturnInternalServerError
+
+  @WEB-EXC-05
+  Scénario: Troncature d'une stack trace très longue
+    Étant donné une exception dont la stack trace dépasse 8192 caractères
+    Quand le défaut est indexé
+    Alors la stack trace stockée est tronquée avec l'indication "(truncated)"
+    # Réf: GlobalExceptionHandlerTest.handleGeneric_shouldTruncateVeryLongStackTrace
+
+  @WEB-EXC-06
+  Scénario: Pas d'indexation si OpenSearch désactivé
+    Étant donné qu'aucun OpenSearchDefectLogger n'est disponible
+    Quand le handler traite une exception
+    Alors aucun appel d'indexation n'est effectué
+    # Réf: GlobalExceptionHandlerTest.shouldNotIndexDefectWhenLoggerUnavailable
+```
+
+```gherkin
+@existant @unite @integration
+Fonctionnalité: Observabilité OpenSearch (défauts et sécurité)
+  En tant qu'équipe DevOps
+  Je veux journaliser défauts et accès sensibles dans OpenSearch
+  Afin d'alimenter le SIEM et les tableaux de bord
+
+  @OBS-OS-01
+  Scénario: Propriétés OpenSearch par défaut et personnalisées
+    Étant donné un bean OpenSearchProperties
+    Quand je lis ou modifie host, port, index et flags
+    Alors les getters reflètent les valeurs configurées
+    # Réf: OpenSearchPropertiesTest
+
+  @OBS-OS-02
+  Scénario: Bean OpenSearchClient créé quand opensearch.enabled=true
+    Étant donné un contexte Spring Boot de test avec OpenSearch activé
+    Quand le contexte démarre
+    Alors un OpenSearchClient est injecté
+    # Réf: OpenSearchConfigTest.openSearchClientBean_shouldBeCreatedWhenEnabled
+
+  @OBS-OS-03
+  Scénario: Indexation d'un défaut applicatif
+    Étant donné un OpenSearchDefectLogger et un DefectDocument
+    Quand indexDefect est appelé
+    Alors le client OpenSearch reçoit une requête d'indexation
+    # Réf: OpenSearchDefectLoggerTest.indexDefect_shouldCallOpenSearchClient
+
+  @OBS-OS-04
+  Scénario: Résilience si OpenSearch est indisponible (défauts)
+    Étant donné un client OpenSearch qui lève une exception
+    Quand indexDefect est appelé
+    Alors l'exception n'est pas propagée à l'appelant
+    # Réf: OpenSearchDefectLoggerTest.indexDefect_shouldNotPropagateException
+
+  @OBS-OS-05
+  Scénario: Indexation d'un événement de sécurité (accès)
+    Étant donné un OpenSearchSecurityEventLogger
+    Quand indexSecurityEvent est appelé
+    Alors le client OpenSearch indexe l'événement
+    # Réf: OpenSearchSecurityEventLoggerTest.indexSecurityEvent_shouldCallOpenSearchClient
+
+  @OBS-OS-06
+  Scénario: Journalisation d'accès DELETE sensible après requête
+    Étant donné une requête DELETE sur /persons/1 avec X-Request-Id
+    Quand SecurityAccessLogFilter a traité la requête
+    Alors un SecurityEventDocument sensible est indexé avec outcome "success"
+    # Réf: SecurityAccessLogFilterTest.shouldIndexAccessEventAfterRequest
+
+  @OBS-OS-07
+  Scénario: Exclusion des chemins Actuator du filtre sécurité
+    Étant donné une requête GET /actuator/health
+    Alors le filtre ne s'applique pas
+    # Réf: SecurityAccessLogFilterTest.shouldSkipActuatorPaths
+
+  @OBS-OS-08
+  Scénario: IP client sans en-tête X-Forwarded-For
+    Étant donné une requête sans X-Forwarded-For
+    Alors l'IP résolue est l'adresse distante de la requête
+    # Réf: SecurityAccessLogFilterTest.resolveClientIp_usesRemoteAddrWhenNoForwardedHeader
+
+  @OBS-OS-09
+  Scénario: Requête sans X-Request-Id côté client
+    Étant donné une requête GET /persons sans en-tête X-Request-Id
+    Quand le filtre de sécurité journalise l'accès
+    Alors requestId vaut "unknown" et requestIdProvided est false
+    # Réf: SecurityAccessLogFilterTest.shouldIndexEventWithoutClientRequestId
+
+  @OBS-OS-10
+  Scénario: Troncature d'un User-Agent trop long
+    Étant donné un User-Agent de plus de 512 caractères
+    Quand l'événement de sécurité est construit
+    Alors le userAgent stocké fait au plus 512 caractères
+    # Réf: SecurityAccessLogFilterTest.shouldTruncateLongUserAgent
+```
+
+---
+
 ## 5. API REST — Contacts (Person)
 
 Base URL : `{API}/persons` (Spring Data REST, format HAL).
@@ -677,6 +837,9 @@ Fonctionnalité: Smoke déploiement Docker
 | INT-PERS-02 | @a_implementer | — |
 | INT-PERS-03 | @a_implementer | — |
 | INT-APP-01 | @existant | `MicroCRMApplicationTests.contextLoads` |
+| WEB-REQ-01 … 02 | @existant | `RequestIdFilterTest` |
+| WEB-EXC-01 … 06 | @existant | `GlobalExceptionHandlerTest` |
+| OBS-OS-01 … 10 | @existant | `OpenSearchPropertiesTest`, `OpenSearchConfigTest`, `OpenSearchDefectLoggerTest`, `OpenSearchSecurityEventLoggerTest`, `SecurityAccessLogFilterTest` |
 | API-PERS-01 … 08 | @a_implementer | — (REST Assured / `@SpringBootTest` + TestRestTemplate) |
 | API-ORG-01 … 09 | @a_implementer | — |
 | IF-PERS-01 … 05 | @existant | `person.service.spec.ts` |
@@ -698,12 +861,13 @@ Fonctionnalité: Smoke déploiement Docker
 |--------|-----------|-----------|----------------|
 | Domaine | 13 | 10 | 3 |
 | Intégration | 4 | 2 | 2 |
+| Web / exceptions / observabilité | 18 | 18 | 0 |
 | API REST | 17 | 0 | 17 |
 | Interface front (services) | 12 | 12 | 0 |
 | Interface front (UI) | 16 | 10 | 6 |
 | E2E | 7 | 0 | 7 |
 | Smoke | 3 | 2 | 1 |
-| **Total** | **72** | **36** | **36** |
+| **Total** | **90** | **54** | **36** |
 
 ---
 
@@ -729,4 +893,5 @@ Fonctionnalité: Smoke déploiement Docker
 
 ---
 
-*Dernière mise à jour : plan de test Gherkin MicroCRM — spécification BDD alignée sur l'inventaire des tests JUnit et Jasmine existants.*
+*Dernière mise à jour : ajout section 4.1 (RequestId, GlobalExceptionHandler, OpenSearch, SecurityAccessLogFilter) — couverture backend JaCoCo cible ≥ 80 % (SonarCloud).*
+La couverture globale est à 64,9 % — principalement à cause du package exception et d'OpenSearch. J'examine les fichiers peu couverts pour ajouter des tests.

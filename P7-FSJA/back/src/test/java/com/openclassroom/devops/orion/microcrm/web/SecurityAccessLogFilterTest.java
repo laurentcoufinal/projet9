@@ -89,4 +89,39 @@ class SecurityAccessLogFilterTest {
         assertThat(SecurityAccessLogFilter.isSensitive("GET", "/persons")).isFalse();
         assertThat(SecurityAccessLogFilter.isSensitive("DELETE", "/other")).isTrue();
     }
+
+    @Test
+    void resolveClientIp_usesRemoteAddrWhenNoForwardedHeader() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRemoteAddr("192.168.1.10");
+
+        assertThat(SecurityAccessLogFilter.resolveClientIp(request)).isEqualTo("192.168.1.10");
+    }
+
+    @Test
+    void shouldIndexEventWithoutClientRequestId() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/persons");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        response.setStatus(200);
+
+        filter.doFilter(request, response, new MockFilterChain());
+
+        ArgumentCaptor<SecurityEventDocument> captor = ArgumentCaptor.forClass(SecurityEventDocument.class);
+        verify(securityLogger).indexSecurityEvent(captor.capture());
+        assertThat(captor.getValue().requestId()).isEqualTo("unknown");
+        assertThat(captor.getValue().requestIdProvided()).isFalse();
+    }
+
+    @Test
+    void shouldTruncateLongUserAgent() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/persons");
+        request.addHeader("User-Agent", "A".repeat(600));
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, new MockFilterChain());
+
+        ArgumentCaptor<SecurityEventDocument> captor = ArgumentCaptor.forClass(SecurityEventDocument.class);
+        verify(securityLogger).indexSecurityEvent(captor.capture());
+        assertThat(captor.getValue().userAgent()).hasSize(512);
+    }
 }
