@@ -39,6 +39,14 @@ Ce projet vise à **industrialiser la chaîne de livraison** : automatisation de
 | Qualité / sécurité | SonarCloud, JaCoCo, Dependabot |
 | Observabilité | OpenSearch 2.x, OpenSearch Dashboards, Fluent Bit ; index `microcrm-defects`, `microcrm-security-events`, `microcrm-server-state` |
 
+**Équivalence stack ELK (demande Maria) :** la stack « ELK » est mise en œuvre en **open source** sans cloud obligatoire :
+
+| Composant ELK | Rôle | Implémentation MicroCRM |
+|---------------|------|-------------------------|
+| **E**lasticsearch | Stockage et recherche | **OpenSearch** (cluster Docker) |
+| **L**ogstash | Collecte / transformation | **Fluent Bit** (logs conteneurs + parser JSON) |
+| **K**ibana | Visualisation | **OpenSearch Dashboards** (dashboard **MicroCRM SOC**) |
+
 **Documents associés :** [definition_test.md](definition_test.md), [domaine.md](domaine.md), [information_logge.md](../information_logge.md), [observability/opensearch/README.md](../observability/opensearch/README.md).
 
 ### 1.4 Pipeline CI/CD — vue d’ensemble
@@ -103,6 +111,10 @@ Les jobs `sonarcloud` et `docker` peuvent indexer un événement de sécurité d
 | [`scripts/verify-docker.sh`](scripts/verify-docker.sh) | Validation locale : build Compose, démarrage, curl API/UI |
 | [`../observability/opensearch/setup-siem.sh`](../observability/opensearch/setup-siem.sh) | Initialisation index, modèles et politiques SIEM OpenSearch |
 | [`../observability/opensearch/index-ci-event.sh`](../observability/opensearch/index-ci-event.sh) | Indexation d’événements CI (`sonar.quality_gate`, `docker.build`) |
+| [`../observability/opensearch/setup-slack-destination.sh`](../observability/opensearch/setup-slack-destination.sh) | Destination Alerting + actions Slack sur moniteurs P0 |
+| [`../scripts/notify-slack.sh`](../scripts/notify-slack.sh) | Notification Slack (CI / nightly en échec) |
+| [`../scripts/export-dora-metrics.sh`](../scripts/export-dora-metrics.sh) | Export métriques DORA depuis GitHub Actions |
+| [`../observability/scripts/health-status.sh`](../observability/scripts/health-status.sh) | Rapport santé cluster + API + CI |
 | `docker compose up -d` | Orchestration back + front en local |
 
 **Exécution locale du script de vérification :**
@@ -144,6 +156,7 @@ Les valeurs ne doivent **jamais** être commitées dans le dépôt.
 |-------------------|-------|
 | `SONAR_TOKEN` | Authentification SonarCloud (à créer sur sonarcloud.io) |
 | `GITHUB_TOKEN` | Fourni automatiquement ; utilisé pour Sonar et push GHCR |
+| `SLACK_WEBHOOK_URL` | Secret — Incoming Webhook Slack (alertes CI + OpenSearch) |
 | `OPENSEARCH_URL` | Variable — URL du cluster pour indexation événements CI |
 | `OPENSEARCH_PASSWORD` | Secret — authentification OpenSearch (admin) |
 
@@ -305,9 +318,18 @@ Le backend indexe les défauts et les accès sensibles lorsque `opensearch.enabl
 | Objectif | Critère de réussite | Alerte |
 |----------|---------------------|--------|
 | Qualité code | Quality Gate SonarCloud **OK** (couverture ≥ 80 % visée) | Échec job `sonarcloud` |
-| Non-régression | 100 % tests unitaires/intégration verts (34 + 34) | Échec `backend` ou `frontend` |
-| Déploiement sain | Healthchecks Compose + curl API | Échec `docker-smoke` |
-| Performance pipeline | Build CI < 15 min (cible) | Notification si dépassement récurrent |
+| Non-régression | 100 % tests unitaires/intégration verts (34 + 34) | Échec `backend` ou `frontend` → **Slack** |
+| Déploiement sain | Healthchecks Compose + curl API | Échec `docker-smoke` → **Slack** |
+| Performance pipeline | Build CI < 15 min (cible) | Slack si échec workflow |
+
+### 4.4 Synthèse couverture pour Maria
+
+| Couche | Tests | Couverture lignes | Scénarios BDD `@existant` |
+|--------|-------|-------------------|---------------------------|
+| Backend | 34 (10 classes) | ~94 % JaCoCo | Domaine + web + OpenSearch |
+| Frontend | 34 (8 specs) | ~96 % Karma | Services + composants |
+| **Total automatisé** | **68** | **≥ 80 %** (objectif Sonar) | 54 / 90 dans [definition_test.md](definition_test.md) |
+| Cible itération suivante | API REST + E2E | — | 24 scénarios `@a_implementer` |
 
 ---
 
@@ -344,7 +366,20 @@ Le pipeline transmet les rapports aux chemins définis dans [`sonar-project.prop
 - `back/build/reports/jacoco/test/jacocoTestReport.xml`
 - `front/coverage/lcov.info`
 
-*Captures SonarCloud à insérer en annexe après le prochain scan CI sur `main`.*
+Voir annexe C et [`docs/annexes/README.md`](docs/annexes/README.md) pour les captures à déposer après scan.
+
+#### Règles Sonar prioritaires (synthèse Maria)
+
+| Règle / thème | Statut | Action |
+|---------------|--------|--------|
+| Couverture lignes ≥ 80 % | **Atteint** localement (~94 % / ~96 %) | Maintenir sur chaque PR |
+| CORS wildcard | **Corrigé** | Origines explicites `app.cors.allowed-origins` |
+| Validation `@NotBlank` / `@Email` | **Corrigé** | Person, Organization |
+| NPE `@PreRemove` | **Corrigé** | Garde `organizations != null` |
+| `CascadeType.ALL` | **Corrigé** | `PERSIST`, `MERGE` uniquement |
+| Vulnérabilités npm (High) | **Ouvert** | Suivi Dependabot ; migration Angular 19+ si besoin |
+| Quality Gate bloquante CI | **À activer** | Configuration projet SonarCloud |
+| Authentification API | **Hors périmètre démo** | Spring Security avant prod |
 
 ### 5.2 Analyse des risques (OWASP Top 10 — contexte MicroCRM)
 
@@ -375,6 +410,7 @@ Le pipeline transmet les rapports aux chemins définis dans [`sonar-project.prop
 | **Immédiat** | Renforcer tests back/front pour couverture Quality Gate (≥ 80 %) | **Fait** (34 tests Java, 34 Karma, ~94 % / ~96 %) |
 | **Immédiat** | Tests observabilité (handlers, filtres, loggers OpenSearch) | **Fait** — voir [definition_test.md](definition_test.md) §4.1 |
 | **Court terme** | Migration Angular 18.2.14 + `npm audit fix` | Fait ; audit npm résiduel documenté |
+| **Court terme** | Alertes **Slack** (OpenSearch P0 + échec CI/nightly) | **Fait** — `setup-slack-destination.sh`, `notify-slack.sh`, workflows |
 | **Court terme** | Activer Quality Gate bloquante en CI après premier scan vert | **À faire** sur SonarCloud |
 | **Moyen terme** | Spring Security si exposition réseau élargie | Planifié |
 | **Long terme** | Trivy, WAF, base persistante chiffrée | Planifié |
@@ -394,26 +430,61 @@ Calculées à partir de l’historique GitHub Actions (onglet *Insights* → *Ac
 | **MTTR** | Temps moyen de rétablissement après échec CI | Durée entre échec et premier run vert |
 | **Change Failure Rate** | % de déploiements entraînant un rollback ou hotfix | Échecs `cd` / total déploiements |
 
-*Valeurs observées : à renseigner manuellement depuis GitHub → Insights → Actions (aucun script d’export DORA dans le dépôt à ce jour).*
+Rapport généré par [`scripts/export-dora-metrics.sh`](../scripts/export-dora-metrics.sh) — dernier export : [reports/dora-latest.md](reports/dora-latest.md).
 
-### 6.2 KPI personnalisés
+```bash
+gh auth login
+./scripts/export-dora-metrics.sh -o P7-FSJA/reports/dora-latest.md
+```
+
+| Métrique | Définition | Source |
+|----------|------------|--------|
+| **Lead Time for Changes** | Commit → image GHCR disponible | `ci.yml` + `cd.yml` |
+| **Deployment Frequency** | Déploiements CD réussis / semaine | Workflow `CD` |
+| **MTTR** | Délai échec CI → succès sur `main` | Historique Actions |
+| **Change Failure Rate** | % CD en échec | Runs `CD` |
+
+### 6.2 KPI proposés à Maria
+
+#### Application (logs, volumétrie, pics, erreurs)
+
+| KPI | Seuil / cible | Source OpenSearch | Alerte Slack |
+|-----|---------------|-------------------|--------------|
+| Erreurs 5xx | < 10 / 5 min | `microcrm-defects` | `[P0] spike 5xx` |
+| Erreurs 4xx | < 50 / 5 min | `microcrm-defects` | `[P1] spike 4xx` |
+| Santé conteneurs | 0 `down` / 2 min | `microcrm-server-state` | `[P0] service unhealthy` |
+| Volume requêtes API | Histogramme / heure | `microcrm-security-events` | Dashboard SOC |
+| DELETE massifs | < 20 / 10 min | `microcrm-security-events` | `[P1] mass DELETE` |
+| Corrélation incident | `requestId` commun | Tous index | Discover |
+
+#### Pipeline et qualité
 
 | KPI | Cible indicative | Source |
 |-----|------------------|--------|
+| Couverture backend | ≥ 80 % (obs. ~94 %) | JaCoCo / SonarCloud |
+| Couverture frontend | ≥ 80 % (obs. ~96 %) | Karma LCOV / SonarCloud |
 | Durée job `backend` | < 3 min | GitHub Actions |
 | Durée job `frontend` | < 5 min | GitHub Actions |
-| Durée job `sonarcloud` | < 4 min | GitHub Actions |
-| Durée build Docker | < 10 min | GitHub Actions |
-| Durée smoke nightly (`docker-smoke`) | < 5 min | `nightly.yml` |
-| Taux d’échec CI sur 30 jours | < 10 % | Insights Actions |
-| Disponibilité index OpenSearch | Cluster `green` ou `yellow` | `/_cluster/health` ou Dashboards |
+| Durée smoke nightly | < 5 min | `nightly.yml` |
+| Taux d’échec CI (30 j) | < 10 % | `export-dora-metrics.sh` |
+| Quality Gate Sonar | OK | SonarCloud |
 
-### 6.3 Synthèse monitoring
+### 6.3 Synthèse monitoring et maturité pipeline
 
-- **Points forts :** parallélisation back/front, cache Gradle/npm, healthchecks Compose, SIEM OpenSearch (défauts + accès + logs conteneurs), indexation événements CI optionnelle.
-- **Points à améliorer :** métriques DORA automatisées (export API GitHub), alerting Slack/e-mail sur échec nightly (**non implémenté**), smoke OpenSearch dans la CI nightly.
-- **Dashboards :** SonarCloud (qualité), GitHub Actions (CI), GHCR (versions images), OpenSearch Dashboards (Security Analytics, Alerting, Discover) — port **5601** si stack observabilité démarrée.
-- **Référence opérationnelle :** [information_logge.md](../information_logge.md), [observability/opensearch/README.md](../observability/opensearch/README.md).
+- **Points forts :** stack ELK équivalente opérationnelle en local ; dashboard **MicroCRM SOC** ; alertes **Slack** (moniteurs P0 + échec CI/nightly) ; export DORA scriptable ; couverture tests ≥ 80 %.
+- **Points à améliorer :** Quality Gate Sonar bloquante ; captures SonarCloud en annexe ; smoke OpenSearch dans CI nightly (optionnel).
+- **Dashboards :** OpenSearch Dashboards (:5601), SonarCloud, GitHub Actions, GHCR.
+- **Démo Maria :** [observability/opensearch/DEMO-MARIA.md](../observability/opensearch/DEMO-MARIA.md).
+- **Références :** [information_logge.md](../information_logge.md), [observability/opensearch/README.md](../observability/opensearch/README.md).
+
+#### Interprétation maturité (synthèse DORA)
+
+| Niveau | Indicateur | Recommandation |
+|--------|------------|----------------|
+| Lead Time | Réduire durée CI (caches, parallélisme) | Déjà en place ; viser < 15 min total |
+| Deployment Frequency | Augmenter fréquence merges sur `main` | CD automatique après CI vert |
+| MTTR | Alertes Slack + runbook | `health-status.sh`, canal `#orion-microcrm-alerts` |
+| Change Failure Rate | Quality Gate + tests 34+34 | Activer gate bloquante SonarCloud |
 
 ---
 
@@ -507,7 +578,7 @@ Calculées à partir de l’historique GitHub Actions (onglet *Insights* → *Ac
 2. Implémenter les scénarios `@a_implementer` : tests API REST (17) et E2E (7) — voir [definition_test.md](definition_test.md).
 3. Traiter les vulnérabilités npm signalées par `npm audit` (Dependabot / migration Angular 19+).
 4. Ajouter Spring Security avant toute exposition Internet.
-5. Automatiser le tableau de bord DORA (script API GitHub) et l’alerting sur échec nightly.
+5. Compléter les tests API REST et E2E (`@a_implementer`).
 
 ---
 
@@ -526,8 +597,8 @@ Calculées à partir de l’historique GitHub Actions (onglet *Insights* → *Ac
 | §5 Sécurité | Scan images Trivy | Moyenne | Job CI dédié |
 | §5 Sécurité | Quality Gate Sonar bloquante confirmée | Moyenne | Configuration SonarCloud |
 | §5 Sécurité | Vulnérabilités npm résiduelles | Moyenne | Dependabot, Angular 19+ |
-| §6 Monitoring | Valeurs DORA mesurées / export auto | Moyenne | Script API GitHub Actions |
-| §6 Monitoring | Alerting Slack/e-mail (nightly) | Faible | Webhook `if: failure()` |
+| §6 Monitoring | Valeurs DORA à jour après chaque sprint | Faible | `./scripts/export-dora-metrics.sh` |
+| §6 Monitoring | Configurer `SLACK_WEBHOOK_URL` en prod | Faible | Secret GitHub + `setup-slack-destination.sh` |
 | §3 Déploiement | Base persistante (HSQLDB mémoire) | Faible (démo) | PostgreSQL + volume Docker |
 | §6 Monitoring | Smoke OpenSearch dans CI | Faible | Job nightly optionnel |
 | Annexes | Captures SonarCloud réelles | Faible | Post-scan CI sur `main` |
@@ -572,7 +643,15 @@ docker compose -f docker-compose-opensearch.yml up -d
 
 ### C. Captures SonarCloud
 
-*Insérer ici les captures d’écran du tableau de bord SonarCloud après le prochain scan CI réussi sur `main` (couverture, Quality Gate, vulnérabilités).*
+Placer les fichiers dans [`docs/annexes/`](docs/annexes/) :
+
+| Fichier | Contenu |
+|---------|---------|
+| `sonar-overview.png` | Quality Gate + vue projet |
+| `sonar-coverage.png` | Couverture Java / TypeScript |
+| `sonar-security.png` | Vulnérabilités et hotspots |
+
+Dashboard : https://sonarcloud.io/project/overview?id=laurentcoufinal_projet9
 
 ### D. Export PDF
 
@@ -604,3 +683,10 @@ curl -ks -u admin:$OPENSEARCH_INITIAL_ADMIN_PASSWORD \
 ```
 
 Index principaux : `microcrm-defects`, `microcrm-security-events`, `microcrm-server-state`, `security-auditlog-*`.
+
+### F. Alertes Slack
+
+1. Créer Incoming Webhook Slack → canal `#orion-microcrm-alerts`.
+2. GitHub : secret `SLACK_WEBHOOK_URL`.
+3. OpenSearch : `export SLACK_WEBHOOK_URL=... && ./observability/opensearch/setup-slack-destination.sh`
+4. Vérifier : provoquer un échec de workflow ou un spike 5xx de test.

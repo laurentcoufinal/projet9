@@ -91,6 +91,15 @@
 Provisionnement : `./observability/opensearch/setup-siem.sh`  
 Dashboards : **MicroCRM SOC** (http://localhost:5601)
 
+### Notifications Slack
+
+| Canal | Mécanisme |
+|-------|-----------|
+| OpenSearch Alerting | `./observability/opensearch/setup-slack-destination.sh` (variable `SLACK_WEBHOOK_URL`) |
+| CI / Nightly en échec | Secret GitHub `SLACK_WEBHOOK_URL` + `scripts/notify-slack.sh` |
+
+Messages types : `[P0] MicroCRM spike 5xx`, `[CI] Nightly failed`, etc.
+
 ---
 
 ## Procédure incident

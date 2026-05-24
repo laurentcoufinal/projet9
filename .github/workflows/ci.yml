@@ -182,3 +182,21 @@ jobs:
         run: |
           chmod +x observability/opensearch/index-ci-event.sh
           ./observability/opensearch/index-ci-event.sh docker.build "${CI_CONCLUSION:-unknown}"
+
+  notify-slack:
+    name: Notify Slack on failure
+    runs-on: ubuntu-latest
+    needs: [backend, frontend, sonarcloud, docker]
+    if: failure()
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Send Slack alert
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          chmod +x scripts/notify-slack.sh
+          ./scripts/notify-slack.sh \
+            "[CI] Pipeline failed — ${{ github.repository }}" \
+            "Workflow: ${{ github.workflow }} | Branch: ${{ github.ref_name }} | Actor: ${{ github.actor }}" \
+            "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

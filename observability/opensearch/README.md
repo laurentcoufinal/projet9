@@ -10,6 +10,8 @@
 | `security-analytics-detectors.json` | Détecteurs bucket-level (5xx, 4xx, volume IP) |
 | `index-template-security-events.json` | Mapping `microcrm-security-events` |
 | `index-ci-event.sh` | Publication événements CI vers OpenSearch |
+| `setup-slack-destination.sh` | Destination webhook Slack + actions sur moniteurs P0 |
+| `DEMO-MARIA.md` | Procédure démo monitoring pour Maria |
 
 ## Prérequis
 
@@ -32,7 +34,21 @@ Dashboards : http://localhost:5601 → **MicroCRM SOC**
 | `microcrm-server-health-down` | ≥ 1 health `down` / 2 min | `microcrm-server-state` |
 | `microcrm-security-mass-delete` | > 20 DELETE réussis / 10 min | `microcrm-security-events` |
 
-Configurer des actions (e-mail, webhook) dans Dashboards → Alerting → Monitors.
+### Slack (recommandé)
+
+```bash
+export SLACK_WEBHOOK_URL="https://hooks.slack.com/services/..."   # ne pas committer
+export OPENSEARCH_PASSWORD="..."
+./observability/opensearch/setup-slack-destination.sh
+```
+
+Crée la destination Alerting et attache les notifications aux 4 moniteurs P0.
+
+Alternative manuelle : Dashboards → **Alerting** → **Destinations** → **Create destination** → custom webhook → URL Slack.
+
+### CI GitHub
+
+Secret dépôt : `SLACK_WEBHOOK_URL`. Les workflows `ci.yml` et `nightly.yml` appellent `scripts/notify-slack.sh` en cas d'échec.
 
 ## Événements CI
 

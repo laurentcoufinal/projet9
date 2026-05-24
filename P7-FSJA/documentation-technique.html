@@ -1,0 +1,2297 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Documentation technique MicroCRM</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Documentation technique MicroCRM</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#documentation-technique-scénario-orion-microcrm"
+id="toc-documentation-technique-scénario-orion-microcrm">Documentation
+technique — Scénario Orion MicroCRM</a>
+<ul>
+<li><a href="#introduction" id="toc-introduction">1. Introduction</a>
+<ul>
+<li><a href="#contexte-du-projet" id="toc-contexte-du-projet">1.1
+Contexte du projet</a></li>
+<li><a href="#objectifs-de-lindustrialisation"
+id="toc-objectifs-de-lindustrialisation">1.2 Objectifs de
+l’industrialisation</a></li>
+<li><a href="#technologies-principales"
+id="toc-technologies-principales">1.3 Technologies principales</a></li>
+<li><a href="#pipeline-cicd-vue-densemble"
+id="toc-pipeline-cicd-vue-densemble">1.4 Pipeline CI/CD — vue
+d’ensemble</a></li>
+</ul></li>
+<li><a href="#étapes-de-mise-en-œuvre-du-pipeline-cicd"
+id="toc-étapes-de-mise-en-œuvre-du-pipeline-cicd">2. Étapes de mise en
+œuvre du pipeline CI/CD</a>
+<ul>
+<li><a href="#structure-du-pipeline" id="toc-structure-du-pipeline">2.1
+Structure du pipeline</a></li>
+<li><a href="#scripts-dautomatisation"
+id="toc-scripts-dautomatisation">2.2 Scripts d’automatisation</a></li>
+<li><a href="#observabilité-ci-optionnelle"
+id="toc-observabilité-ci-optionnelle">2.3 Observabilité CI
+(optionnelle)</a></li>
+<li><a href="#reproductibilité" id="toc-reproductibilité">2.4
+Reproductibilité</a></li>
+</ul></li>
+<li><a href="#plan-de-conteneurisation-et-de-déploiement"
+id="toc-plan-de-conteneurisation-et-de-déploiement">3. Plan de
+conteneurisation et de déploiement</a>
+<ul>
+<li><a href="#dockerfiles" id="toc-dockerfiles">3.1 Dockerfiles</a></li>
+<li><a href="#docker-compose.yml" id="toc-docker-compose.yml">3.2
+docker-compose.yml</a></li>
+<li><a href="#déploiement-ghcr" id="toc-déploiement-ghcr">3.3
+Déploiement (GHCR)</a></li>
+<li><a href="#stack-observabilité-optionnelle"
+id="toc-stack-observabilité-optionnelle">3.4 Stack observabilité
+(optionnelle)</a></li>
+</ul></li>
+<li><a href="#plan-de-testing-périodique"
+id="toc-plan-de-testing-périodique">4. Plan de testing périodique</a>
+<ul>
+<li><a href="#types-de-tests-automatisés"
+id="toc-types-de-tests-automatisés">4.1 Types de tests
+automatisés</a></li>
+<li><a href="#fréquence-dexécution" id="toc-fréquence-dexécution">4.2
+Fréquence d’exécution</a></li>
+<li><a href="#objectifs-et-critères" id="toc-objectifs-et-critères">4.3
+Objectifs et critères</a></li>
+<li><a href="#synthèse-couverture-pour-maria"
+id="toc-synthèse-couverture-pour-maria">4.4 Synthèse couverture pour
+Maria</a></li>
+</ul></li>
+<li><a href="#plan-de-sécurité" id="toc-plan-de-sécurité">5. Plan de
+sécurité</a>
+<ul>
+<li><a href="#résultats-sonarcloud" id="toc-résultats-sonarcloud">5.1
+Résultats SonarCloud</a></li>
+<li><a href="#analyse-des-risques-owasp-top-10-contexte-microcrm"
+id="toc-analyse-des-risques-owasp-top-10-contexte-microcrm">5.2 Analyse
+des risques (OWASP Top 10 — contexte MicroCRM)</a></li>
+<li><a href="#plan-daction-remédiation"
+id="toc-plan-daction-remédiation">5.3 Plan d’action /
+remédiation</a></li>
+</ul></li>
+<li><a href="#monitoring-métriques-et-kpi"
+id="toc-monitoring-métriques-et-kpi">6. Monitoring, métriques et KPI</a>
+<ul>
+<li><a href="#métriques-dora" id="toc-métriques-dora">6.1 Métriques
+DORA</a></li>
+<li><a href="#kpi-proposés-à-maria" id="toc-kpi-proposés-à-maria">6.2
+KPI proposés à Maria</a></li>
+<li><a href="#synthèse-monitoring-et-maturité-pipeline"
+id="toc-synthèse-monitoring-et-maturité-pipeline">6.3 Synthèse
+monitoring et maturité pipeline</a></li>
+</ul></li>
+<li><a href="#plan-de-sauvegarde-des-données"
+id="toc-plan-de-sauvegarde-des-données">7. Plan de sauvegarde des
+données</a>
+<ul>
+<li><a href="#ce-qui-doit-être-sauvegardé"
+id="toc-ce-qui-doit-être-sauvegardé">7.1 Ce qui doit être
+sauvegardé</a></li>
+<li><a href="#procédure-de-sauvegarde"
+id="toc-procédure-de-sauvegarde">7.2 Procédure de sauvegarde</a></li>
+<li><a href="#procédure-de-restauration"
+id="toc-procédure-de-restauration">7.3 Procédure de
+restauration</a></li>
+</ul></li>
+<li><a href="#plan-de-mise-à-jour" id="toc-plan-de-mise-à-jour">8. Plan
+de mise à jour</a>
+<ul>
+<li><a href="#application" id="toc-application">8.1 Application</a></li>
+<li><a href="#pipeline-cicd" id="toc-pipeline-cicd">8.2 Pipeline
+CI/CD</a></li>
+<li><a href="#bonnes-pratiques" id="toc-bonnes-pratiques">8.3 Bonnes
+pratiques</a></li>
+</ul></li>
+<li><a href="#conclusion" id="toc-conclusion">9. Conclusion</a>
+<ul>
+<li><a href="#améliorations-apportées"
+id="toc-améliorations-apportées">9.1 Améliorations apportées</a></li>
+<li><a href="#gains-observés-attendus"
+id="toc-gains-observés-attendus">9.2 Gains observés / attendus</a></li>
+<li><a href="#recommandations" id="toc-recommandations">9.3
+Recommandations</a></li>
+</ul></li>
+<li><a href="#écarts-projet-template-manques-identifiés"
+id="toc-écarts-projet-template-manques-identifiés">10. Écarts projet /
+template (manques identifiés)</a></li>
+<li><a href="#annexes" id="toc-annexes">Annexes</a>
+<ul>
+<li><a href="#a.-extrait-workflow-ci-sonarcloud"
+id="toc-a.-extrait-workflow-ci-sonarcloud">A. Extrait workflow CI
+(sonarcloud)</a></li>
+<li><a href="#b.-commandes-utiles" id="toc-b.-commandes-utiles">B.
+Commandes utiles</a></li>
+<li><a href="#c.-captures-sonarcloud" id="toc-c.-captures-sonarcloud">C.
+Captures SonarCloud</a></li>
+<li><a href="#d.-export-pdf" id="toc-d.-export-pdf">D. Export
+PDF</a></li>
+<li><a href="#e.-observabilité-commandes-siem"
+id="toc-e.-observabilité-commandes-siem">E. Observabilité — commandes
+SIEM</a></li>
+<li><a href="#f.-alertes-slack" id="toc-f.-alertes-slack">F. Alertes
+Slack</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="documentation-technique-scénario-orion-microcrm">Documentation
+technique — Scénario Orion MicroCRM</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr>
+<td><strong>Titre</strong></td>
+<td>Documentation technique — Industrialisation CI/CD MicroCRM</td>
+</tr>
+<tr>
+<td><strong>Option</strong></td>
+<td><strong>Option B — Scénario Orion</strong> (entreprise fictive
+Orion, application MicroCRM)</td>
+</tr>
+<tr>
+<td><strong>Auteur</strong></td>
+<td>LT</td>
+</tr>
+<tr>
+<td><strong>Date</strong></td>
+<td>23/05/2026 (mise à jour)</td>
+</tr>
+<tr>
+<td><strong>Dépôt</strong></td>
+<td>https://github.com/laurentcoufinal/projet9</td>
+</tr>
+<tr>
+<td><strong>Application</strong></td>
+<td>Orion MicroCRM (Spring Boot 3 + Angular 18)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="introduction">1. Introduction</h2>
+<h3 id="contexte-du-projet">1.1 Contexte du projet</h3>
+<p>Orion est une entreprise spécialisée dans les solutions
+technologiques. Elle développe <strong>MicroCRM</strong>, une
+application CRM simplifiée destinée aux équipes technique et
+commerciale. Jusqu’à présent, les déploiements étaient manuels, ce qui
+entraînait retards, erreurs humaines et difficulté à maintenir la
+qualité.</p>
+<p>Ce projet vise à <strong>industrialiser la chaîne de
+livraison</strong> : automatisation des builds, des tests, de l’analyse
+qualité/sécurité et du déploiement conteneurisé.</p>
+<h3 id="objectifs-de-lindustrialisation">1.2 Objectifs de
+l’industrialisation</h3>
+<ul>
+<li>Réduire le délai entre un commit et une version déployable
+testable.</li>
+<li>Garantir la <strong>non-régression</strong> via des tests
+automatisés à chaque modification.</li>
+<li>Intégrer <strong>SonarCloud</strong> pour la qualité et les
+vulnérabilités.</li>
+<li>Standardiser le déploiement avec <strong>Docker</strong> et
+<strong>Docker Compose</strong>.</li>
+<li>Documenter les procédures (sécurité, sauvegarde, mises à jour).</li>
+<li>Mettre en place une <strong>journalisation centralisée</strong>
+(OpenSearch / SIEM) pour défauts, accès API et événements CI.</li>
+</ul>
+<h3 id="technologies-principales">1.3 Technologies principales</h3>
+<table>
+<colgroup>
+<col style="width: 38%" />
+<col style="width: 61%" />
+</colgroup>
+<thead>
+<tr>
+<th>Couche</th>
+<th>Technologie</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Backend</td>
+<td>Java 17, Spring Boot 3.2, Spring Data REST, Gradle 8.7, HSQLDB</td>
+</tr>
+<tr>
+<td>Frontend</td>
+<td>Angular 18.2, TypeScript, Karma/Jasmine</td>
+</tr>
+<tr>
+<td>Conteneurisation</td>
+<td>Docker multi-stage, Caddy, Alpine Linux</td>
+</tr>
+<tr>
+<td>CI/CD</td>
+<td>GitHub Actions, GHCR</td>
+</tr>
+<tr>
+<td>Qualité / sécurité</td>
+<td>SonarCloud, JaCoCo, Dependabot</td>
+</tr>
+<tr>
+<td>Observabilité</td>
+<td>OpenSearch 2.x, OpenSearch Dashboards, Fluent Bit ; index
+<code>microcrm-defects</code>, <code>microcrm-security-events</code>,
+<code>microcrm-server-state</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Équivalence stack ELK (demande Maria) :</strong> la stack «
+ELK » est mise en œuvre en <strong>open source</strong> sans cloud
+obligatoire :</p>
+<table>
+<colgroup>
+<col style="width: 32%" />
+<col style="width: 13%" />
+<col style="width: 54%" />
+</colgroup>
+<thead>
+<tr>
+<th>Composant ELK</th>
+<th>Rôle</th>
+<th>Implémentation MicroCRM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>E</strong>lasticsearch</td>
+<td>Stockage et recherche</td>
+<td><strong>OpenSearch</strong> (cluster Docker)</td>
+</tr>
+<tr>
+<td><strong>L</strong>ogstash</td>
+<td>Collecte / transformation</td>
+<td><strong>Fluent Bit</strong> (logs conteneurs + parser JSON)</td>
+</tr>
+<tr>
+<td><strong>K</strong>ibana</td>
+<td>Visualisation</td>
+<td><strong>OpenSearch Dashboards</strong> (dashboard <strong>MicroCRM
+SOC</strong>)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Documents associés :</strong> <a
+href="definition_test.md">definition_test.md</a>, <a
+href="domaine.md">domaine.md</a>, <a
+href="../information_logge.md">information_logge.md</a>, <a
+href="../observability/opensearch/README.md">observability/opensearch/README.md</a>.</p>
+<h3 id="pipeline-cicd-vue-densemble">1.4 Pipeline CI/CD — vue
+d’ensemble</h3>
+<p><strong>Schéma (draw.io) :</strong> <a
+href="diagrams/pipeline-cicd-overview.drawio"><code>diagrams/pipeline-cicd-overview.drawio</code></a>
+— ouvrir avec <a href="https://app.diagrams.net">diagrams.net</a> ou
+l’extension Draw.io de VS Code. Pour le PDF, exporter en PNG depuis
+draw.io (<em>Fichier → Exporter → PNG</em>).</p>
+<table>
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr>
+<th>Zone</th>
+<th>Contenu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>CI</strong> (push / PR)</td>
+<td><code>backend</code> et <code>frontend</code> en parallèle →
+<code>sonarcloud</code> → <code>docker</code> ; indexation OpenSearch
+optionnelle après Sonar/Docker</td>
+</tr>
+<tr>
+<td><strong>CD</strong> (<code>main</code>)</td>
+<td>Publication des images sur GHCR après CI réussi</td>
+</tr>
+<tr>
+<td><strong>Nightly</strong> (02h UTC)</td>
+<td>Tests complets → smoke Docker Compose</td>
+</tr>
+</tbody>
+</table>
+<p>Les jobs <code>sonarcloud</code> et <code>docker</code> peuvent
+indexer un événement de sécurité dans OpenSearch
+(<code>index-ci-event.sh</code>) si <code>OPENSEARCH_URL</code> et
+<code>OPENSEARCH_PASSWORD</code> sont configurés dans GitHub (étape non
+bloquante).</p>
+<p><strong>Workflows GitHub :</strong></p>
+<ul>
+<li><code>ci.yml</code> — build, tests, analyse SonarCloud, construction
+des images, indexation CI optionnelle vers OpenSearch.</li>
+<li><code>cd.yml</code> — publication des images sur GitHub Container
+Registry après CI réussi sur <code>main</code>.</li>
+<li><code>nightly.yml</code> — exécution planifiée quotidienne (tests +
+Sonar + smoke test Compose).</li>
+</ul>
+<hr />
+<h2 id="étapes-de-mise-en-œuvre-du-pipeline-cicd">2. Étapes de mise en
+œuvre du pipeline CI/CD</h2>
+<h3 id="structure-du-pipeline">2.1 Structure du pipeline</h3>
+<h4 id="étapes-principales">Étapes principales</h4>
+<table>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 48%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Étape</th>
+<th>Job GitHub Actions</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Build backend</td>
+<td><code>backend</code></td>
+<td><code>./gradlew build test jacocoTestReport</code></td>
+</tr>
+<tr>
+<td>Build frontend</td>
+<td><code>frontend</code></td>
+<td><code>npm ci</code>, <code>ng build</code>,
+<code>npm run test:ci</code></td>
+</tr>
+<tr>
+<td>Analyse qualité</td>
+<td><code>sonarcloud</code></td>
+<td>Scan SonarCloud (Java + TypeScript)</td>
+</tr>
+<tr>
+<td>Conteneurisation</td>
+<td><code>docker</code></td>
+<td><code>docker compose build</code></td>
+</tr>
+<tr>
+<td>Déploiement</td>
+<td><code>cd</code> (séparé)</td>
+<td>Push images vers <code>ghcr.io</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="ordre-dexécution">Ordre d’exécution</h4>
+<ol type="1">
+<li><code>backend</code> et <code>frontend</code> en
+<strong>parallèle</strong>.</li>
+<li><code>sonarcloud</code> après succès des deux (nécessite binaires
+Java et rapport LCOV front).</li>
+<li><code>docker</code> après succès des jobs de build (indépendant de
+Sonar pour ne pas bloquer en phase de mise en route).</li>
+<li><code>cd</code> déclenché par la complétion réussie de CI sur
+<code>main</code>, ou manuellement
+(<code>workflow_dispatch</code>).</li>
+</ol>
+<h4 id="justification-des-actions-github">Justification des actions
+GitHub</h4>
+<table>
+<colgroup>
+<col style="width: 57%" />
+<col style="width: 42%" />
+</colgroup>
+<thead>
+<tr>
+<th>Action</th>
+<th>Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>actions/checkout@v4</code></td>
+<td>Récupération du code source</td>
+</tr>
+<tr>
+<td><code>actions/setup-java@v4</code></td>
+<td>JDK 17 Temurin + cache Gradle</td>
+</tr>
+<tr>
+<td><code>actions/setup-node@v4</code></td>
+<td>Node 20 + cache npm</td>
+</tr>
+<tr>
+<td><code>browser-actions/setup-chrome@v1</code></td>
+<td>Chrome headless pour Karma en CI</td>
+</tr>
+<tr>
+<td><code>SonarSource/sonarcloud-github-action@v2</code></td>
+<td>Analyse statique centralisée</td>
+</tr>
+<tr>
+<td><code>docker/setup-buildx-action@v3</code></td>
+<td>Build Docker optimisé</td>
+</tr>
+<tr>
+<td><code>docker/login-action@v3</code> +
+<code>build-push-action@v6</code></td>
+<td>Publication GHCR</td>
+</tr>
+</tbody>
+</table>
+<h3 id="scripts-dautomatisation">2.2 Scripts d’automatisation</h3>
+<table>
+<colgroup>
+<col style="width: 76%" />
+<col style="width: 24%" />
+</colgroup>
+<thead>
+<tr>
+<th>Script / commande</th>
+<th>Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>back/gradlew build test jacocoTestReport</code></td>
+<td>Compile, teste et produit la couverture Java</td>
+</tr>
+<tr>
+<td><code>front/npm run test:ci</code></td>
+<td>Tests unitaires headless + couverture LCOV</td>
+</tr>
+<tr>
+<td><a
+href="scripts/verify-docker.sh"><code>scripts/verify-docker.sh</code></a></td>
+<td>Validation locale : build Compose, démarrage, curl API/UI</td>
+</tr>
+<tr>
+<td><a
+href="../observability/opensearch/setup-siem.sh"><code>../observability/opensearch/setup-siem.sh</code></a></td>
+<td>Initialisation index, modèles et politiques SIEM OpenSearch</td>
+</tr>
+<tr>
+<td><a
+href="../observability/opensearch/index-ci-event.sh"><code>../observability/opensearch/index-ci-event.sh</code></a></td>
+<td>Indexation d’événements CI (<code>sonar.quality_gate</code>,
+<code>docker.build</code>)</td>
+</tr>
+<tr>
+<td><a
+href="../observability/opensearch/setup-slack-destination.sh"><code>../observability/opensearch/setup-slack-destination.sh</code></a></td>
+<td>Destination Alerting + actions Slack sur moniteurs P0</td>
+</tr>
+<tr>
+<td><a
+href="../scripts/notify-slack.sh"><code>../scripts/notify-slack.sh</code></a></td>
+<td>Notification Slack (CI / nightly en échec)</td>
+</tr>
+<tr>
+<td><a
+href="../scripts/export-dora-metrics.sh"><code>../scripts/export-dora-metrics.sh</code></a></td>
+<td>Export métriques DORA depuis GitHub Actions</td>
+</tr>
+<tr>
+<td><a
+href="../observability/scripts/health-status.sh"><code>../observability/scripts/health-status.sh</code></a></td>
+<td>Rapport santé cluster + API + CI</td>
+</tr>
+<tr>
+<td><code>docker compose up -d</code></td>
+<td>Orchestration back + front en local</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exécution locale du script de vérification :</strong></p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> P7-FSJA</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./scripts/verify-docker.sh</span></span></code></pre></div>
+<p><strong>Initialisation SIEM (stack OpenSearch démarrée)
+:</strong></p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Depuis la racine du dépôt, après docker compose -f docker-compose-opensearch.yml up -d</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./observability/opensearch/setup-siem.sh</span></span></code></pre></div>
+<h3 id="observabilité-ci-optionnelle">2.3 Observabilité CI
+(optionnelle)</h3>
+<p>Après les jobs <code>sonarcloud</code> et <code>docker</code> de <a
+href="../.github/workflows/ci.yml"><code>ci.yml</code></a>, le workflow
+exécute <code>index-ci-event.sh</code> avec
+<code>continue-on-error: true</code> : l’échec d’OpenSearch n’interrompt
+pas la CI.</p>
+<table>
+<colgroup>
+<col style="width: 56%" />
+<col style="width: 20%" />
+<col style="width: 23%" />
+</colgroup>
+<thead>
+<tr>
+<th>Variable GitHub</th>
+<th>Type</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OPENSEARCH_URL</code></td>
+<td>Variable (<code>vars</code>)</td>
+<td>URL HTTPS du cluster (ex. tunnel ou instance dédiée)</td>
+</tr>
+<tr>
+<td><code>OPENSEARCH_PASSWORD</code></td>
+<td>Secret</td>
+<td>Mot de passe utilisateur <code>admin</code> OpenSearch</td>
+</tr>
+</tbody>
+</table>
+<p>Les valeurs ne doivent <strong>jamais</strong> être commitées dans le
+dépôt.</p>
+<h3 id="reproductibilité">2.4 Reproductibilité</h3>
+<p><strong>Relancer le pipeline :</strong></p>
+<ul>
+<li>Push ou PR sur <code>main</code> → déclenche
+<code>ci.yml</code>.</li>
+<li>Onglet Actions → workflow <strong>Nightly</strong> → <em>Run
+workflow</em>.</li>
+<li>Onglet Actions → workflow <strong>CD</strong> → <em>Run
+workflow</em> (publication manuelle).</li>
+</ul>
+<p><strong>Gestion des secrets (jamais affichés dans les logs)
+:</strong></p>
+<table>
+<colgroup>
+<col style="width: 73%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th>Secret / variable</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SONAR_TOKEN</code></td>
+<td>Authentification SonarCloud (à créer sur sonarcloud.io)</td>
+</tr>
+<tr>
+<td><code>GITHUB_TOKEN</code></td>
+<td>Fourni automatiquement ; utilisé pour Sonar et push GHCR</td>
+</tr>
+<tr>
+<td><code>SLACK_WEBHOOK_URL</code></td>
+<td>Secret — Incoming Webhook Slack (alertes CI + OpenSearch)</td>
+</tr>
+<tr>
+<td><code>OPENSEARCH_URL</code></td>
+<td>Variable — URL du cluster pour indexation événements CI</td>
+</tr>
+<tr>
+<td><code>OPENSEARCH_PASSWORD</code></td>
+<td>Secret — authentification OpenSearch (admin)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Configuration SonarCloud :</strong> fichier <a
+href="sonar-project.properties"><code>sonar-project.properties</code></a>
+— clés <code>laurentcoufinal_projet9</code> / organisation
+<code>laurentcoufinal</code> (à aligner avec le projet créé sur
+SonarCloud).</p>
+<hr />
+<h2 id="plan-de-conteneurisation-et-de-déploiement">3. Plan de
+conteneurisation et de déploiement</h2>
+<h3 id="dockerfiles">3.1 Dockerfiles</h3>
+<p>Le <a href="Dockerfile"><code>Dockerfile</code></a> utilise un
+<strong>build multi-stage</strong> :</p>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 46%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Image de base</th>
+<th>Résultat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>front-build</code></td>
+<td><code>node</code></td>
+<td>Build Angular optimisé</td>
+</tr>
+<tr>
+<td><code>back-build</code></td>
+<td><code>gradle:jdk17</code></td>
+<td>JAR Spring Boot</td>
+</tr>
+<tr>
+<td><code>front</code></td>
+<td><code>alpine:3.19</code> + Caddy</td>
+<td>Assets statiques, ports 80/443</td>
+</tr>
+<tr>
+<td><code>back</code></td>
+<td><code>alpine:3.19</code> + JRE 21</td>
+<td>API sur port <strong>8080</strong></td>
+</tr>
+<tr>
+<td><code>standalone</code></td>
+<td>Alpine + Supervisor</td>
+<td>Front + back dans un seul conteneur (profil optionnel)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Choix techniques :</strong></p>
+<ul>
+<li>Images Alpine légères pour l’exécution.</li>
+<li><code>npm ci</code> et <code>./gradlew build</code> dans des stages
+dédiés pour maximiser le cache Docker.</li>
+<li><code>curl</code> / <code>wget</code> ajoutés pour les
+healthchecks.</li>
+<li>Correction du port exposé backend : <code>8080</code> (et non
+4200).</li>
+</ul>
+<h3 id="docker-compose.yml">3.2 docker-compose.yml</h3>
+<p><strong>Services :</strong></p>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Image cible</th>
+<th>Ports hôte</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>back</code></td>
+<td><code>target: back</code></td>
+<td>8080</td>
+</tr>
+<tr>
+<td><code>front</code></td>
+<td><code>target: front</code></td>
+<td>80, 443</td>
+</tr>
+<tr>
+<td><code>standalone</code></td>
+<td>profil <code>standalone</code></td>
+<td>8080, 80, 443</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Healthchecks :</strong></p>
+<ul>
+<li>Backend : <code>curl -f http://localhost:8080/persons</code></li>
+<li>Frontend : <code>wget</code> sur
+<code>http://localhost:80/</code></li>
+<li>Le front démarre uniquement si le back est <code>healthy</code>
+(<code>depends_on</code>).</li>
+</ul>
+<p><strong>Lancement local :</strong></p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> P7-FSJA</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose build</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose up <span class="at">-d</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># API : http://localhost:8080/persons</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># UI  : https://localhost (redirection HTTP → HTTPS par Caddy)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose down</span></code></pre></div>
+<p><strong>Profil tout-en-un :</strong></p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose <span class="at">--profile</span> standalone up <span class="at">-d</span></span></code></pre></div>
+<p><strong>Note réseau :</strong> le frontend appelle l’API via
+<code>http://localhost:8080</code> (<a
+href="front/src/app/config.ts"><code>config.ts</code></a>). Avec les
+ports publiés sur l’hôte, le navigateur accède correctement à l’API.</p>
+<p><strong>Journalisation conteneurs :</strong> par défaut, les services
+MicroCRM utilisent le driver <strong><code>json-file</code></strong>
+(arrêt propre via <code>docker compose down</code>). Pour envoyer les
+logs vers Fluent Bit, utiliser le profil optionnel :</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose <span class="at">-f</span> docker-compose.yml <span class="at">-f</span> docker-compose.fluent-logs.yml up <span class="at">-d</span></span></code></pre></div>
+<h3 id="déploiement-ghcr">3.3 Déploiement (GHCR)</h3>
+<p>Images publiées par le workflow CD :</p>
+<ul>
+<li><code>ghcr.io/laurentcoufinal/projet9/orion-microcrm-back:latest</code></li>
+<li><code>ghcr.io/laurentcoufinal/projet9/orion-microcrm-front:latest</code></li>
+</ul>
+<p>Sur une machine cible :</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> login ghcr.io <span class="at">-u</span> <span class="op">&lt;</span>utilisateur<span class="op">&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> pull ghcr.io/laurentcoufinal/projet9/orion-microcrm-back:latest</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> pull ghcr.io/laurentcoufinal/projet9/orion-microcrm-front:latest</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> P7-FSJA <span class="kw">&amp;&amp;</span> <span class="ex">docker</span> compose up <span class="at">-d</span></span></code></pre></div>
+<h3 id="stack-observabilité-optionnelle">3.4 Stack observabilité
+(optionnelle)</h3>
+<p>Fichier racine <a
+href="../docker-compose-opensearch.yml"><code>docker-compose-opensearch.yml</code></a>
+— indépendant de MicroCRM :</p>
+<table>
+<colgroup>
+<col style="width: 34%" />
+<col style="width: 23%" />
+<col style="width: 42%" />
+</colgroup>
+<thead>
+<tr>
+<th>Service</th>
+<th>Rôle</th>
+<th>Port hôte</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>opensearch-node1</code> / <code>node2</code></td>
+<td>Cluster OpenSearch</td>
+<td>9200</td>
+</tr>
+<tr>
+<td><code>opensearch-dashboards</code></td>
+<td>UI (Security Analytics, Alerting)</td>
+<td>5601</td>
+</tr>
+<tr>
+<td><code>fluent-bit</code></td>
+<td>Collecte logs conteneurs + parsing JSON / lignes
+<code>SECURITY</code></td>
+<td>24224</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Lancement :</strong></p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Racine du dépôt — fichier .env requis (OPENSEARCH_INITIAL_ADMIN_PASSWORD, etc.)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose <span class="at">-f</span> docker-compose-opensearch.yml up <span class="at">-d</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> P7-FSJA <span class="kw">&amp;&amp;</span> <span class="ex">docker</span> compose up <span class="at">-d</span></span></code></pre></div>
+<p>Référence détaillée des index et champs : <a
+href="../information_logge.md">information_logge.md</a>. Configuration
+Fluent Bit : <a
+href="../observability/fluent-bit/"><code>observability/fluent-bit/</code></a>.</p>
+<p>Le backend indexe les défauts et les accès sensibles lorsque
+<code>opensearch.enabled=true</code> (désactivé en CI :
+<code>OPENSEARCH_ENABLED=false</code>).</p>
+<hr />
+<h2 id="plan-de-testing-périodique">4. Plan de testing périodique</h2>
+<h3 id="types-de-tests-automatisés">4.1 Types de tests automatisés</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 29%" />
+<col style="width: 45%" />
+</colgroup>
+<thead>
+<tr>
+<th>Type</th>
+<th>Outil</th>
+<th>Périmètre</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Spécification BDD (Gherkin)</td>
+<td><a href="definition_test.md">definition_test.md</a></td>
+<td>90 scénarios — <code>@existant</code> / <code>@a_implementer</code>,
+traçabilité JUnit/Karma</td>
+</tr>
+<tr>
+<td>Unitaires domaine backend</td>
+<td>JUnit 5</td>
+<td><code>PersonTest</code>, <code>OrganizationTest</code></td>
+</tr>
+<tr>
+<td>Intégration persistance</td>
+<td><code>@DataJpaTest</code></td>
+<td><code>PersonRepositoryIntegrationTest</code></td>
+</tr>
+<tr>
+<td>Infrastructure web / exceptions</td>
+<td>JUnit 5 + Mockito</td>
+<td><code>RequestIdFilterTest</code>,
+<code>GlobalExceptionHandlerTest</code></td>
+</tr>
+<tr>
+<td>Observabilité OpenSearch</td>
+<td>JUnit 5 + Mockito</td>
+<td><code>OpenSearch*Test</code>,
+<code>SecurityAccessLogFilterTest</code></td>
+</tr>
+<tr>
+<td>Démarrage application</td>
+<td><code>@SpringBootTest</code></td>
+<td><code>MicroCRMApplicationTests</code>,
+<code>OpenSearchConfigTest</code></td>
+</tr>
+<tr>
+<td>Unitaires frontend</td>
+<td>Karma, Jasmine, Chrome headless</td>
+<td>8 fichiers <code>*.spec.ts</code> (services, composants,
+intercepteur)</td>
+</tr>
+<tr>
+<td>Couverture</td>
+<td>JaCoCo (Java), karma-coverage LCOV (TS)</td>
+<td>Alimente SonarCloud</td>
+</tr>
+<tr>
+<td>Qualité / sécurité statique</td>
+<td>SonarCloud</td>
+<td>Code smells, vulnérabilités, hotspots</td>
+</tr>
+<tr>
+<td>Smoke infrastructure</td>
+<td><code>curl</code> sur stack Docker Compose</td>
+<td>Job <code>docker-smoke</code> (nightly)</td>
+</tr>
+<tr>
+<td>API REST / E2E (cible)</td>
+<td>REST Assured, Playwright</td>
+<td>17 + 7 scénarios <code>@a_implementer</code> — voir §4.1 de <a
+href="definition_test.md">definition_test.md</a></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Inventaire chiffré (mesures locales, mai 2026) :</strong></p>
+<table>
+<colgroup>
+<col style="width: 34%" />
+<col style="width: 31%" />
+<col style="width: 34%" />
+</colgroup>
+<thead>
+<tr>
+<th>Métrique</th>
+<th>Backend</th>
+<th>Frontend</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nombre de tests</td>
+<td><strong>34</strong> (10 classes <code>*Test.java</code>)</td>
+<td><strong>34</strong> (8 specs)</td>
+</tr>
+<tr>
+<td>Couverture lignes</td>
+<td><strong>~94 %</strong> JaCoCo (246/262)</td>
+<td><strong>~96 %</strong> Karma (128/134)</td>
+</tr>
+<tr>
+<td>Objectif SonarCloud</td>
+<td>≥ <strong>80 %</strong></td>
+<td>≥ <strong>80 %</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Tests observabilité et web (§4.1 de definition_test.md)
+:</strong></p>
+<table>
+<colgroup>
+<col style="width: 45%" />
+<col style="width: 54%" />
+</colgroup>
+<thead>
+<tr>
+<th>Classe de test</th>
+<th>Scénarios couverts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>RequestIdFilterTest</code></td>
+<td>Conservation / génération <code>X-Request-Id</code></td>
+</tr>
+<tr>
+<td><code>GlobalExceptionHandlerTest</code></td>
+<td>400, 409, 500, troncature stack, indexation défauts</td>
+</tr>
+<tr>
+<td><code>OpenSearchPropertiesTest</code></td>
+<td>Contrat configuration OpenSearch</td>
+</tr>
+<tr>
+<td><code>OpenSearchConfigTest</code></td>
+<td>Bean <code>OpenSearchClient</code> si
+<code>opensearch.enabled=true</code></td>
+</tr>
+<tr>
+<td><code>OpenSearchDefectLoggerTest</code></td>
+<td>Indexation défauts, résilience</td>
+</tr>
+<tr>
+<td><code>OpenSearchSecurityEventLoggerTest</code></td>
+<td>Indexation événements sécurité</td>
+</tr>
+<tr>
+<td><code>SecurityAccessLogFilterTest</code></td>
+<td>Journal accès API, IP, User-Agent, chemins Actuator</td>
+</tr>
+</tbody>
+</table>
+<h3 id="fréquence-dexécution">4.2 Fréquence d’exécution</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 66%" />
+</colgroup>
+<thead>
+<tr>
+<th>Moment</th>
+<th>Tests exécutés</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Push / PR</strong> sur <code>main</code></td>
+<td>Build, tests back/front, SonarCloud, build Docker</td>
+</tr>
+<tr>
+<td><strong>Nightly</strong> (cron <code>0 2 * * *</code> UTC)</td>
+<td>Tests complets, Sonar, smoke Compose</td>
+</tr>
+<tr>
+<td><strong>Publication images</strong></td>
+<td>Déclenchement CD après CI vert sur <code>main</code>, ou manuel
+(<code>workflow_dispatch</code>) — pas de workflow dédié aux tags
+<code>v*</code></td>
+</tr>
+<tr>
+<td><strong>Dependabot</strong> (hebdomadaire)</td>
+<td>PR de mise à jour dépendances (Gradle, npm, Actions, Docker)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="objectifs-et-critères">4.3 Objectifs et critères</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 53%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Objectif</th>
+<th>Critère de réussite</th>
+<th>Alerte</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Qualité code</td>
+<td>Quality Gate SonarCloud <strong>OK</strong> (couverture ≥ 80 %
+visée)</td>
+<td>Échec job <code>sonarcloud</code></td>
+</tr>
+<tr>
+<td>Non-régression</td>
+<td>100 % tests unitaires/intégration verts (34 + 34)</td>
+<td>Échec <code>backend</code> ou <code>frontend</code> →
+<strong>Slack</strong></td>
+</tr>
+<tr>
+<td>Déploiement sain</td>
+<td>Healthchecks Compose + curl API</td>
+<td>Échec <code>docker-smoke</code> → <strong>Slack</strong></td>
+</tr>
+<tr>
+<td>Performance pipeline</td>
+<td>Build CI &lt; 15 min (cible)</td>
+<td>Slack si échec workflow</td>
+</tr>
+</tbody>
+</table>
+<h3 id="synthèse-couverture-pour-maria">4.4 Synthèse couverture pour
+Maria</h3>
+<table>
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 11%" />
+<col style="width: 31%" />
+<col style="width: 44%" />
+</colgroup>
+<thead>
+<tr>
+<th>Couche</th>
+<th>Tests</th>
+<th>Couverture lignes</th>
+<th>Scénarios BDD <code>@existant</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Backend</td>
+<td>34 (10 classes)</td>
+<td>~94 % JaCoCo</td>
+<td>Domaine + web + OpenSearch</td>
+</tr>
+<tr>
+<td>Frontend</td>
+<td>34 (8 specs)</td>
+<td>~96 % Karma</td>
+<td>Services + composants</td>
+</tr>
+<tr>
+<td><strong>Total automatisé</strong></td>
+<td><strong>68</strong></td>
+<td><strong>≥ 80 %</strong> (objectif Sonar)</td>
+<td>54 / 90 dans <a
+href="definition_test.md">definition_test.md</a></td>
+</tr>
+<tr>
+<td>Cible itération suivante</td>
+<td>API REST + E2E</td>
+<td>—</td>
+<td>24 scénarios <code>@a_implementer</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="plan-de-sécurité">5. Plan de sécurité</h2>
+<h3 id="résultats-sonarcloud">5.1 Résultats SonarCloud</h3>
+<p>Analyse basée sur les rapports de couverture locaux et les
+corrections appliquées (mai 2026). Dashboard :
+https://sonarcloud.io/project/overview?id=laurentcoufinal_projet9</p>
+<table>
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 20%" />
+<col style="width: 40%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th>Indicateur</th>
+<th>Avant remédiation</th>
+<th>Après remédiation (local, mai 2026)</th>
+<th>Objectif Quality Gate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Couverture backend (lignes)</td>
+<td>~64 %</td>
+<td><strong>~94 %</strong> (JaCoCo, 34 tests)</td>
+<td>≥ 80 % (projet) ; ≥ 50 % (gate par défaut)</td>
+</tr>
+<tr>
+<td>Couverture frontend (lignes)</td>
+<td>~31 %</td>
+<td><strong>~96 %</strong> (34 tests Karma)</td>
+<td>≥ 80 % (projet) ; ≥ 50 % (gate par défaut)</td>
+</tr>
+<tr>
+<td>CORS wildcard <code>*</code></td>
+<td>Présent</td>
+<td><strong>Corrigé</strong> — origines explicites via
+<code>app.cors.allowed-origins</code></td>
+<td>Hotspot revu</td>
+</tr>
+<tr>
+<td>NPE <code>@PreRemove</code></td>
+<td>Risque</td>
+<td><strong>Corrigé</strong> — garde
+<code>organizations != null</code></td>
+<td>Bug fermé</td>
+</tr>
+<tr>
+<td>Dépendance Gradle dupliquée</td>
+<td>Oui</td>
+<td><strong>Corrigée</strong></td>
+<td>Code smell fermé</td>
+</tr>
+<tr>
+<td>Validation entrées REST</td>
+<td>Absente</td>
+<td><strong>Ajoutée</strong> — <code>@NotBlank</code>,
+<code>@Email</code> sur <code>Person</code> /
+<code>Organization</code></td>
+<td>Fiabilité améliorée</td>
+</tr>
+<tr>
+<td><code>CascadeType.ALL</code></td>
+<td>Présent</td>
+<td><strong>Remplacé</strong> par <code>PERSIST</code>,
+<code>MERGE</code></td>
+<td>Risque données réduit</td>
+</tr>
+<tr>
+<td>Vulnérabilités npm (High)</td>
+<td>28 (Angular 17)</td>
+<td><strong>28</strong> signalées par <code>npm audit</code> après
+<strong>Angular 18.2.14</strong> (dernier patch 18.2.x ; correctifs
+complets proposés en 19.x uniquement)</td>
+<td>Suivi Dependabot</td>
+</tr>
+<tr>
+<td>Version Angular</td>
+<td>17.3.x</td>
+<td><strong>18.2.14</strong> (LTS)</td>
+<td>Patches XSS/XSRF de la branche 18</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Corrections code principales :</strong></p>
+<ul>
+<li><a
+href="back/src/main/java/com/openclassroom/devops/orion/microcrm/SpringDataRestCustomization.java"><code>SpringDataRestCustomization.java</code></a>
+: CORS configurable.</li>
+<li><a
+href="back/src/main/java/com/openclassroom/devops/orion/microcrm/Person.java"><code>Person.java</code></a>
+: <code>removeFromOrganization()</code>, validation Jakarta.</li>
+<li>Tests : <code>PersonTest</code>, <code>OrganizationTest</code>,
+<code>GlobalExceptionHandlerTest</code>,
+<code>SecurityAccessLogFilterTest</code>, specs Angular avec
+<code>HttpTestingController</code>.</li>
+<li><strong>SIEM (A09)</strong> : <code>GlobalExceptionHandler</code> →
+index <code>microcrm-defects</code> ;
+<code>SecurityAccessLogFilter</code> → index
+<code>microcrm-security-events</code> ; corrélation via
+<code>X-Request-Id</code> (<a
+href="back/src/main/java/com/openclassroom/devops/orion/microcrm/web/RequestIdFilter.java"><code>RequestIdFilter</code></a>).</li>
+<li>Types HAL typés dans <a
+href="front/src/app/models.ts"><code>models.ts</code></a> ;
+<code>API_BASE_URL</code> via <a
+href="front/src/environments/environment.ts"><code>environment.ts</code></a>.</li>
+<li>Migration <strong>Angular 18.2.14</strong> :
+<code>ng update @angular/core@18 @angular/cli@18</code> ; providers HTTP
+(<code>provideHttpClient</code>) dans les specs.</li>
+<li>Rapports npm : <a
+href="front/audit-avant.txt"><code>front/audit-avant.txt</code></a>, <a
+href="front/audit-apres.txt"><code>front/audit-apres.txt</code></a>.</li>
+</ul>
+<p>Le pipeline transmet les rapports aux chemins définis dans <a
+href="sonar-project.properties"><code>sonar-project.properties</code></a>
+:</p>
+<ul>
+<li><code>back/build/reports/jacoco/test/jacocoTestReport.xml</code></li>
+<li><code>front/coverage/lcov.info</code></li>
+</ul>
+<p>Voir annexe C et <a
+href="docs/annexes/README.md"><code>docs/annexes/README.md</code></a>
+pour les captures à déposer après scan.</p>
+<h4 id="règles-sonar-prioritaires-synthèse-maria">Règles Sonar
+prioritaires (synthèse Maria)</h4>
+<table>
+<colgroup>
+<col style="width: 48%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Règle / thème</th>
+<th>Statut</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Couverture lignes ≥ 80 %</td>
+<td><strong>Atteint</strong> localement (~94 % / ~96 %)</td>
+<td>Maintenir sur chaque PR</td>
+</tr>
+<tr>
+<td>CORS wildcard</td>
+<td><strong>Corrigé</strong></td>
+<td>Origines explicites <code>app.cors.allowed-origins</code></td>
+</tr>
+<tr>
+<td>Validation <code>@NotBlank</code> / <code>@Email</code></td>
+<td><strong>Corrigé</strong></td>
+<td>Person, Organization</td>
+</tr>
+<tr>
+<td>NPE <code>@PreRemove</code></td>
+<td><strong>Corrigé</strong></td>
+<td>Garde <code>organizations != null</code></td>
+</tr>
+<tr>
+<td><code>CascadeType.ALL</code></td>
+<td><strong>Corrigé</strong></td>
+<td><code>PERSIST</code>, <code>MERGE</code> uniquement</td>
+</tr>
+<tr>
+<td>Vulnérabilités npm (High)</td>
+<td><strong>Ouvert</strong></td>
+<td>Suivi Dependabot ; migration Angular 19+ si besoin</td>
+</tr>
+<tr>
+<td>Quality Gate bloquante CI</td>
+<td><strong>À activer</strong></td>
+<td>Configuration projet SonarCloud</td>
+</tr>
+<tr>
+<td>Authentification API</td>
+<td><strong>Hors périmètre démo</strong></td>
+<td>Spring Security avant prod</td>
+</tr>
+</tbody>
+</table>
+<h3 id="analyse-des-risques-owasp-top-10-contexte-microcrm">5.2 Analyse
+des risques (OWASP Top 10 — contexte MicroCRM)</h3>
+<table>
+<colgroup>
+<col style="width: 32%" />
+<col style="width: 27%" />
+<col style="width: 39%" />
+</colgroup>
+<thead>
+<tr>
+<th>Risque OWASP</th>
+<th>Évaluation</th>
+<th>Mesure en place</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A01 — Contrôle d’accès</td>
+<td><strong>Élevé</strong> (app sans authentification)</td>
+<td>Accepté pour démo interne ; à traiter avant exposition Internet</td>
+</tr>
+<tr>
+<td>A02 — Défaillances cryptographiques</td>
+<td>Faible</td>
+<td>HTTPS via Caddy en conteneur front</td>
+</tr>
+<tr>
+<td>A03 — Injection</td>
+<td>Faible</td>
+<td>Spring Data JPA, pas de SQL natif concaténé</td>
+</tr>
+<tr>
+<td>A04 — Conception non sécurisée</td>
+<td>Moyen</td>
+<td>Revue Sonar + Dependabot</td>
+</tr>
+<tr>
+<td>A05 — Mauvaise configuration</td>
+<td>Moyen</td>
+<td>Secrets GitHub, pas de credentials dans le repo</td>
+</tr>
+<tr>
+<td>A06 — Composants vulnérables</td>
+<td><strong>Moyen/Élevé</strong></td>
+<td>npm audit signale des vulnérabilités ; Dependabot hebdomadaire</td>
+</tr>
+<tr>
+<td>A07 — Identification / auth</td>
+<td>N/A (hors périmètre actuel)</td>
+<td>—</td>
+</tr>
+<tr>
+<td>A08 — Intégrité logicielle</td>
+<td>Faible</td>
+<td>CI sur GitHub, images signées par registre GHCR</td>
+</tr>
+<tr>
+<td>A09 — Journalisation</td>
+<td><strong>Renforcé</strong></td>
+<td>Index <code>microcrm-defects</code>,
+<code>microcrm-security-events</code>,
+<code>microcrm-server-state</code> ; filtres back + Fluent Bit ;
+dashboards Security Analytics / Alerting ; audit OpenSearch
+(<code>security-auditlog-*</code>) — voir <a
+href="../information_logge.md">information_logge.md</a></td>
+</tr>
+<tr>
+<td>A10 — SSRF</td>
+<td>Faible</td>
+<td>Pas d’appels HTTP sortants dynamiques côté API</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Risques pipeline :</strong></p>
+<ul>
+<li>Fuite de <code>SONAR_TOKEN</code> → stockage uniquement dans GitHub
+Secrets.</li>
+<li>Actions compromises → versions épinglées (<code>@v4</code>,
+<code>@v2</code>), Dependabot sur <code>github-actions</code>.</li>
+<li>Images obsolètes → surveillance <code>alpine:3.19</code>, mises à
+jour planifiées.</li>
+</ul>
+<h3 id="plan-daction-remédiation">5.3 Plan d’action / remédiation</h3>
+<table>
+<colgroup>
+<col style="width: 38%" />
+<col style="width: 30%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr>
+<th>Priorité</th>
+<th>Action</th>
+<th>Statut</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Immédiat</strong></td>
+<td>Configurer <code>SONAR_TOKEN</code> ; corriger CORS, NPE, smells
+Gradle</td>
+<td>Fait (code)</td>
+</tr>
+<tr>
+<td><strong>Immédiat</strong></td>
+<td>Renforcer tests back/front pour couverture Quality Gate (≥ 80
+%)</td>
+<td><strong>Fait</strong> (34 tests Java, 34 Karma, ~94 % / ~96 %)</td>
+</tr>
+<tr>
+<td><strong>Immédiat</strong></td>
+<td>Tests observabilité (handlers, filtres, loggers OpenSearch)</td>
+<td><strong>Fait</strong> — voir <a
+href="definition_test.md">definition_test.md</a> §4.1</td>
+</tr>
+<tr>
+<td><strong>Court terme</strong></td>
+<td>Migration Angular 18.2.14 + <code>npm audit fix</code></td>
+<td>Fait ; audit npm résiduel documenté</td>
+</tr>
+<tr>
+<td><strong>Court terme</strong></td>
+<td>Alertes <strong>Slack</strong> (OpenSearch P0 + échec
+CI/nightly)</td>
+<td><strong>Fait</strong> — <code>setup-slack-destination.sh</code>,
+<code>notify-slack.sh</code>, workflows</td>
+</tr>
+<tr>
+<td><strong>Court terme</strong></td>
+<td>Activer Quality Gate bloquante en CI après premier scan vert</td>
+<td><strong>À faire</strong> sur SonarCloud</td>
+</tr>
+<tr>
+<td><strong>Moyen terme</strong></td>
+<td>Spring Security si exposition réseau élargie</td>
+<td>Planifié</td>
+</tr>
+<tr>
+<td><strong>Long terme</strong></td>
+<td>Trivy, WAF, base persistante chiffrée</td>
+<td>Planifié</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="monitoring-métriques-et-kpi">6. Monitoring, métriques et
+KPI</h2>
+<h3 id="métriques-dora">6.1 Métriques DORA</h3>
+<p>Calculées à partir de l’historique GitHub Actions (onglet
+<em>Insights</em> → <em>Actions</em>) :</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 40%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th>Métrique</th>
+<th>Définition</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Lead Time for Changes</strong></td>
+<td>Temps entre commit et déploiement image disponible</td>
+<td><code>ci.yml</code> + <code>cd.yml</code> timestamps</td>
+</tr>
+<tr>
+<td><strong>Deployment Frequency</strong></td>
+<td>Nombre de déploiements réussis / semaine</td>
+<td>Runs <code>CD</code> sur <code>main</code></td>
+</tr>
+<tr>
+<td><strong>MTTR</strong></td>
+<td>Temps moyen de rétablissement après échec CI</td>
+<td>Durée entre échec et premier run vert</td>
+</tr>
+<tr>
+<td><strong>Change Failure Rate</strong></td>
+<td>% de déploiements entraînant un rollback ou hotfix</td>
+<td>Échecs <code>cd</code> / total déploiements</td>
+</tr>
+</tbody>
+</table>
+<p>Rapport généré par <a
+href="../scripts/export-dora-metrics.sh"><code>scripts/export-dora-metrics.sh</code></a>
+— dernier export : <a
+href="reports/dora-latest.md">reports/dora-latest.md</a>.</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> auth login</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./scripts/export-dora-metrics.sh</span> <span class="at">-o</span> P7-FSJA/reports/dora-latest.md</span></code></pre></div>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 40%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th>Métrique</th>
+<th>Définition</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Lead Time for Changes</strong></td>
+<td>Commit → image GHCR disponible</td>
+<td><code>ci.yml</code> + <code>cd.yml</code></td>
+</tr>
+<tr>
+<td><strong>Deployment Frequency</strong></td>
+<td>Déploiements CD réussis / semaine</td>
+<td>Workflow <code>CD</code></td>
+</tr>
+<tr>
+<td><strong>MTTR</strong></td>
+<td>Délai échec CI → succès sur <code>main</code></td>
+<td>Historique Actions</td>
+</tr>
+<tr>
+<td><strong>Change Failure Rate</strong></td>
+<td>% CD en échec</td>
+<td>Runs <code>CD</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="kpi-proposés-à-maria">6.2 KPI proposés à Maria</h3>
+<h4 id="application-logs-volumétrie-pics-erreurs">Application (logs,
+volumétrie, pics, erreurs)</h4>
+<table>
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 28%" />
+<col style="width: 35%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th>KPI</th>
+<th>Seuil / cible</th>
+<th>Source OpenSearch</th>
+<th>Alerte Slack</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Erreurs 5xx</td>
+<td>&lt; 10 / 5 min</td>
+<td><code>microcrm-defects</code></td>
+<td><code>[P0] spike 5xx</code></td>
+</tr>
+<tr>
+<td>Erreurs 4xx</td>
+<td>&lt; 50 / 5 min</td>
+<td><code>microcrm-defects</code></td>
+<td><code>[P1] spike 4xx</code></td>
+</tr>
+<tr>
+<td>Santé conteneurs</td>
+<td>0 <code>down</code> / 2 min</td>
+<td><code>microcrm-server-state</code></td>
+<td><code>[P0] service unhealthy</code></td>
+</tr>
+<tr>
+<td>Volume requêtes API</td>
+<td>Histogramme / heure</td>
+<td><code>microcrm-security-events</code></td>
+<td>Dashboard SOC</td>
+</tr>
+<tr>
+<td>DELETE massifs</td>
+<td>&lt; 20 / 10 min</td>
+<td><code>microcrm-security-events</code></td>
+<td><code>[P1] mass DELETE</code></td>
+</tr>
+<tr>
+<td>Corrélation incident</td>
+<td><code>requestId</code> commun</td>
+<td>Tous index</td>
+<td>Discover</td>
+</tr>
+</tbody>
+</table>
+<h4 id="pipeline-et-qualité">Pipeline et qualité</h4>
+<table>
+<thead>
+<tr>
+<th>KPI</th>
+<th>Cible indicative</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Couverture backend</td>
+<td>≥ 80 % (obs. ~94 %)</td>
+<td>JaCoCo / SonarCloud</td>
+</tr>
+<tr>
+<td>Couverture frontend</td>
+<td>≥ 80 % (obs. ~96 %)</td>
+<td>Karma LCOV / SonarCloud</td>
+</tr>
+<tr>
+<td>Durée job <code>backend</code></td>
+<td>&lt; 3 min</td>
+<td>GitHub Actions</td>
+</tr>
+<tr>
+<td>Durée job <code>frontend</code></td>
+<td>&lt; 5 min</td>
+<td>GitHub Actions</td>
+</tr>
+<tr>
+<td>Durée smoke nightly</td>
+<td>&lt; 5 min</td>
+<td><code>nightly.yml</code></td>
+</tr>
+<tr>
+<td>Taux d’échec CI (30 j)</td>
+<td>&lt; 10 %</td>
+<td><code>export-dora-metrics.sh</code></td>
+</tr>
+<tr>
+<td>Quality Gate Sonar</td>
+<td>OK</td>
+<td>SonarCloud</td>
+</tr>
+</tbody>
+</table>
+<h3 id="synthèse-monitoring-et-maturité-pipeline">6.3 Synthèse
+monitoring et maturité pipeline</h3>
+<ul>
+<li><strong>Points forts :</strong> stack ELK équivalente opérationnelle
+en local ; dashboard <strong>MicroCRM SOC</strong> ; alertes
+<strong>Slack</strong> (moniteurs P0 + échec CI/nightly) ; export DORA
+scriptable ; couverture tests ≥ 80 %.</li>
+<li><strong>Points à améliorer :</strong> Quality Gate Sonar bloquante ;
+captures SonarCloud en annexe ; smoke OpenSearch dans CI nightly
+(optionnel).</li>
+<li><strong>Dashboards :</strong> OpenSearch Dashboards (:5601),
+SonarCloud, GitHub Actions, GHCR.</li>
+<li><strong>Démo Maria :</strong> <a
+href="../observability/opensearch/DEMO-MARIA.md">observability/opensearch/DEMO-MARIA.md</a>.</li>
+<li><strong>Références :</strong> <a
+href="../information_logge.md">information_logge.md</a>, <a
+href="../observability/opensearch/README.md">observability/opensearch/README.md</a>.</li>
+</ul>
+<h4 id="interprétation-maturité-synthèse-dora">Interprétation maturité
+(synthèse DORA)</h4>
+<table>
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 33%" />
+<col style="width: 44%" />
+</colgroup>
+<thead>
+<tr>
+<th>Niveau</th>
+<th>Indicateur</th>
+<th>Recommandation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lead Time</td>
+<td>Réduire durée CI (caches, parallélisme)</td>
+<td>Déjà en place ; viser &lt; 15 min total</td>
+</tr>
+<tr>
+<td>Deployment Frequency</td>
+<td>Augmenter fréquence merges sur <code>main</code></td>
+<td>CD automatique après CI vert</td>
+</tr>
+<tr>
+<td>MTTR</td>
+<td>Alertes Slack + runbook</td>
+<td><code>health-status.sh</code>, canal
+<code>#orion-microcrm-alerts</code></td>
+</tr>
+<tr>
+<td>Change Failure Rate</td>
+<td>Quality Gate + tests 34+34</td>
+<td>Activer gate bloquante SonarCloud</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="plan-de-sauvegarde-des-données">7. Plan de sauvegarde des
+données</h2>
+<h3 id="ce-qui-doit-être-sauvegardé">7.1 Ce qui doit être
+sauvegardé</h3>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 36%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Élément</th>
+<th>Criticité</th>
+<th>Remarque</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Code source (Git)</td>
+<td>Haute</td>
+<td>Source de vérité sur GitHub</td>
+</tr>
+<tr>
+<td>Workflows / config CI</td>
+<td>Haute</td>
+<td><code>.github/workflows/</code>, <code>docker-compose.yml</code>,
+<code>sonar-project.properties</code></td>
+</tr>
+<tr>
+<td>Config observabilité</td>
+<td>Moyenne</td>
+<td><code>observability/</code>,
+<code>docker-compose-opensearch.yml</code>, <code>.env</code> (hors
+repo)</td>
+</tr>
+<tr>
+<td>Artefacts build</td>
+<td>Moyenne</td>
+<td>JAR, images Docker sur GHCR</td>
+</tr>
+<tr>
+<td>Données CRM</td>
+<td><strong>Basse</strong> (démo)</td>
+<td>HSQLDB <strong>en mémoire</strong> — perdues au redémarrage</td>
+</tr>
+<tr>
+<td>Indices OpenSearch</td>
+<td>Moyenne (si SIEM actif)</td>
+<td>Export snapshot ou reindex — voir doc OpenSearch</td>
+</tr>
+<tr>
+<td>Rapports Sonar</td>
+<td>Moyenne</td>
+<td>Export PDF / captures depuis SonarCloud</td>
+</tr>
+</tbody>
+</table>
+<h3 id="procédure-de-sauvegarde">7.2 Procédure de sauvegarde</h3>
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 28%" />
+<col style="width: 47%" />
+</colgroup>
+<thead>
+<tr>
+<th>Élément</th>
+<th>Fréquence</th>
+<th>Commande / outil</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dépôt Git</td>
+<td>Continu (push)</td>
+<td><code>git push origin main</code></td>
+</tr>
+<tr>
+<td>Images Docker</td>
+<td>À chaque CD réussi</td>
+<td>Automatique GHCR ; export local :
+<code>docker save -o microcrm-back.tar orion-microcrm-back:latest</code></td>
+</tr>
+<tr>
+<td>Configuration</td>
+<td>Hebdomadaire</td>
+<td>Tag Git <code>backup-YYYY-MM-DD</code> ou branche archive</td>
+</tr>
+<tr>
+<td>Config observabilité</td>
+<td>À chaque changement SIEM</td>
+<td>Commit <code>observability/</code> + copie <code>.env</code>
+sécurisée</td>
+</tr>
+<tr>
+<td>Rapport Sonar</td>
+<td>Mensuel</td>
+<td>Export depuis l’interface SonarCloud</td>
+</tr>
+</tbody>
+</table>
+<h3 id="procédure-de-restauration">7.3 Procédure de restauration</h3>
+<p><strong>Scénario : déploiement défectueux</strong></p>
+<ol type="1">
+<li>Identifier le dernier commit / image stable (<code>git log</code>,
+tag GHCR <code>sha-xxx</code>).</li>
+<li><code>git checkout &lt;tag-stable&gt;</code> ou
+<code>docker pull ghcr.io/.../orion-microcrm-back:&lt;sha&gt;</code>.</li>
+<li><code>docker compose down &amp;&amp; docker compose up -d</code>.</li>
+<li>Vérifier : <code>curl http://localhost:8080/persons</code>.</li>
+</ol>
+<p><strong>Limitations :</strong> aucune restauration de données métier
+(base volatile). Les fixtures Spring rechargent les données de démo au
+démarrage. Les indices OpenSearch ne sont pas sauvegardés
+automatiquement par le pipeline.</p>
+<hr />
+<h2 id="plan-de-mise-à-jour">8. Plan de mise à jour</h2>
+<h3 id="application">8.1 Application</h3>
+<table>
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 24%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr>
+<th>Composant</th>
+<th>Outil</th>
+<th>Fréquence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dépendances Maven</td>
+<td>Dependabot (<code>/P7-FSJA/back</code>)</td>
+<td>Hebdomadaire</td>
+</tr>
+<tr>
+<td>Dépendances npm</td>
+<td>Dependabot (<code>/P7-FSJA/front</code>)</td>
+<td>Hebdomadaire</td>
+</tr>
+<tr>
+<td>Spring Boot / Angular</td>
+<td>PR manuelle après revue changelog</td>
+<td>Trimestrielle</td>
+</tr>
+<tr>
+<td>Images Docker de base</td>
+<td>Dependabot docker + revue Dockerfile</td>
+<td>Mensuelle</td>
+</tr>
+</tbody>
+</table>
+<h3 id="pipeline-cicd">8.2 Pipeline CI/CD</h3>
+<ul>
+<li>Mise à jour des actions GitHub via PR Dependabot.</li>
+<li>Revue semestrielle des workflows (permissions, caches, durées).</li>
+<li>Rotation du token SonarCloud annuelle.</li>
+</ul>
+<h3 id="bonnes-pratiques">8.3 Bonnes pratiques</h3>
+<ul>
+<li>Toujours passer par une PR pour valider l’impact des mises à
+jour.</li>
+<li>Ne jamais merger une PR Dependabot sans CI verte.</li>
+<li>Tester localement <code>verify-docker.sh</code> avant merge des
+changements Docker majeurs.</li>
+</ul>
+<hr />
+<h2 id="conclusion">9. Conclusion</h2>
+<h3 id="améliorations-apportées">9.1 Améliorations apportées</h3>
+<ul>
+<li>Pipeline CI/CD complet sur GitHub Actions (build, tests, SonarCloud,
+Docker).</li>
+<li>Orchestration <strong>Docker Compose</strong> avec healthchecks et
+script de validation.</li>
+<li>Publication automatisée des images sur <strong>GHCR</strong>.</li>
+<li>Tests <strong>nightly</strong> (smoke Compose) et alertes
+Dependabot.</li>
+<li><strong>SIEM OpenSearch</strong> : défauts API, journal d’accès,
+logs conteneurs, événements CI.</li>
+<li>Couverture de tests <strong>≥ 80 %</strong> (backend ~94 %, frontend
+~96 %) — objectif SonarCloud atteint localement.</li>
+<li>Documentation opérationnelle : <a
+href="definition_test.md">definition_test.md</a>, <a
+href="../information_logge.md">information_logge.md</a>, plans sécurité
+/ sauvegarde / testing.</li>
+</ul>
+<h3 id="gains-observés-attendus">9.2 Gains observés / attendus</h3>
+<table>
+<colgroup>
+<col style="width: 64%" />
+<col style="width: 35%" />
+</colgroup>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Gain</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fiabilité</td>
+<td>34 + 34 tests systématiques avant merge ; smoke nightly</td>
+</tr>
+<tr>
+<td>Rapidité</td>
+<td>Builds parallèles, cache, images prêtes à déployer</td>
+</tr>
+<tr>
+<td>Qualité</td>
+<td>SonarCloud + couverture JaCoCo/LCOV</td>
+</tr>
+<tr>
+<td>Sécurité</td>
+<td>Analyse statique, SIEM, corrélation <code>X-Request-Id</code>, suivi
+OWASP</td>
+</tr>
+<tr>
+<td>Observabilité</td>
+<td>Dashboards OpenSearch, indexation défauts et accès sensibles</td>
+</tr>
+</tbody>
+</table>
+<h3 id="recommandations">9.3 Recommandations</h3>
+<ol type="1">
+<li>Activer la Quality Gate bloquante sur SonarCloud après validation du
+prochain scan CI.</li>
+<li>Implémenter les scénarios <code>@a_implementer</code> : tests API
+REST (17) et E2E (7) — voir <a
+href="definition_test.md">definition_test.md</a>.</li>
+<li>Traiter les vulnérabilités npm signalées par <code>npm audit</code>
+(Dependabot / migration Angular 19+).</li>
+<li>Ajouter Spring Security avant toute exposition Internet.</li>
+<li>Compléter les tests API REST et E2E
+(<code>@a_implementer</code>).</li>
+</ol>
+<hr />
+<h2 id="écarts-projet-template-manques-identifiés">10. Écarts projet /
+template (manques identifiés)</h2>
+<p>Éléments prévus par le template ou le CDC mais <strong>absents ou
+incomplets</strong> dans le dépôt :</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 16%" />
+<col style="width: 18%" />
+<col style="width: 44%" />
+</colgroup>
+<thead>
+<tr>
+<th>Chapitre</th>
+<th>Manque</th>
+<th>Gravité</th>
+<th>Piste de remédiation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§4 Tests</td>
+<td>17 scénarios API REST <code>@a_implementer</code></td>
+<td>Haute</td>
+<td>REST Assured / <code>TestRestTemplate</code> dans
+<code>back/src/test/.../api/</code></td>
+</tr>
+<tr>
+<td>§4 Tests</td>
+<td>7 scénarios E2E Playwright/Cypress</td>
+<td>Haute</td>
+<td><code>P7-FSJA/e2e/</code></td>
+</tr>
+<tr>
+<td>§4 Tests</td>
+<td>6 scénarios UI dashboard <code>@a_implementer</code></td>
+<td>Moyenne</td>
+<td>Enrichir <code>main-dashboard.component.spec.ts</code></td>
+</tr>
+<tr>
+<td>§4 Tests</td>
+<td>Intégration OpenSearch réelle (hors mocks)</td>
+<td>Moyenne</td>
+<td>Testcontainers OpenSearch</td>
+</tr>
+<tr>
+<td>§4 Tests</td>
+<td>Workflow release sur tags <code>v*</code></td>
+<td>Faible</td>
+<td>Job <code>on: push: tags</code></td>
+</tr>
+<tr>
+<td>§5 Sécurité</td>
+<td>Authentification / Spring Security</td>
+<td>Haute (prod)</td>
+<td>Accepté pour démo interne</td>
+</tr>
+<tr>
+<td>§5 Sécurité</td>
+<td>Scan images Trivy</td>
+<td>Moyenne</td>
+<td>Job CI dédié</td>
+</tr>
+<tr>
+<td>§5 Sécurité</td>
+<td>Quality Gate Sonar bloquante confirmée</td>
+<td>Moyenne</td>
+<td>Configuration SonarCloud</td>
+</tr>
+<tr>
+<td>§5 Sécurité</td>
+<td>Vulnérabilités npm résiduelles</td>
+<td>Moyenne</td>
+<td>Dependabot, Angular 19+</td>
+</tr>
+<tr>
+<td>§6 Monitoring</td>
+<td>Valeurs DORA à jour après chaque sprint</td>
+<td>Faible</td>
+<td><code>./scripts/export-dora-metrics.sh</code></td>
+</tr>
+<tr>
+<td>§6 Monitoring</td>
+<td>Configurer <code>SLACK_WEBHOOK_URL</code> en prod</td>
+<td>Faible</td>
+<td>Secret GitHub + <code>setup-slack-destination.sh</code></td>
+</tr>
+<tr>
+<td>§3 Déploiement</td>
+<td>Base persistante (HSQLDB mémoire)</td>
+<td>Faible (démo)</td>
+<td>PostgreSQL + volume Docker</td>
+</tr>
+<tr>
+<td>§6 Monitoring</td>
+<td>Smoke OpenSearch dans CI</td>
+<td>Faible</td>
+<td>Job nightly optionnel</td>
+</tr>
+<tr>
+<td>Annexes</td>
+<td>Captures SonarCloud réelles</td>
+<td>Faible</td>
+<td>Post-scan CI sur <code>main</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Déjà conforme au template :</strong> CI/CD GitHub Actions,
+SonarCloud, JaCoCo/LCOV, Docker multi-stage, Compose + healthchecks,
+Dependabot, nightly + smoke, SIEM OpenSearch, documentation README et
+plans sécurité/sauvegarde.</p>
+<hr />
+<h2 id="annexes">Annexes</h2>
+<h3 id="a.-extrait-workflow-ci-sonarcloud">A. Extrait workflow CI
+(sonarcloud)</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> SonarCloud Scan</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> SonarSource/sonarcloud-github-action@v2</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">projectBaseDir</span><span class="kw">:</span><span class="at"> P7-FSJA</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">env</span><span class="kw">:</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">GITHUB_TOKEN</span><span class="kw">:</span><span class="at"> ${{ secrets.GITHUB_TOKEN }}</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">SONAR_TOKEN</span><span class="kw">:</span><span class="at"> ${{ secrets.SONAR_TOKEN }}</span></span></code></pre></div>
+<h3 id="b.-commandes-utiles">B. Commandes utiles</h3>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tests backend</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> P7-FSJA/back <span class="kw">&amp;&amp;</span> <span class="ex">./gradlew</span> test jacocoTestReport</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Tests frontend (CI — Chrome requis)</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> P7-FSJA/front <span class="kw">&amp;&amp;</span> <span class="ex">npm</span> run test:ci</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Stack MicroCRM</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> P7-FSJA <span class="kw">&amp;&amp;</span> <span class="ex">docker</span> compose up <span class="at">-d</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Stack observabilité (racine dépôt)</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose <span class="at">-f</span> docker-compose-opensearch.yml up <span class="at">-d</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="ex">./observability/opensearch/setup-siem.sh</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Vérification automatisée</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="ex">./P7-FSJA/scripts/verify-docker.sh</span></span></code></pre></div>
+<h3 id="c.-captures-sonarcloud">C. Captures SonarCloud</h3>
+<p>Placer les fichiers dans <a
+href="docs/annexes/"><code>docs/annexes/</code></a> :</p>
+<table>
+<thead>
+<tr>
+<th>Fichier</th>
+<th>Contenu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sonar-overview.png</code></td>
+<td>Quality Gate + vue projet</td>
+</tr>
+<tr>
+<td><code>sonar-coverage.png</code></td>
+<td>Couverture Java / TypeScript</td>
+</tr>
+<tr>
+<td><code>sonar-security.png</code></td>
+<td>Vulnérabilités et hotspots</td>
+</tr>
+</tbody>
+</table>
+<p>Dashboard :
+https://sonarcloud.io/project/overview?id=laurentcoufinal_projet9</p>
+<h3 id="d.-export-pdf">D. Export PDF</h3>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Exemple avec Pandoc (pdflatex ou xelatex requis pour le PDF)</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pandoc</span> P7-FSJA/documentation-technique.md <span class="at">-o</span> documentation-technique.pdf <span class="at">--toc</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Alternative sans LaTeX : export HTML puis impression navigateur</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pandoc</span> P7-FSJA/documentation-technique.md <span class="at">-o</span> documentation-technique.html <span class="at">--toc</span> <span class="at">--standalone</span></span></code></pre></div>
+<p>Volume estimé : ~4 000 mots / 619 lignes — conforme à la cible CDC
+(10–15 pages PDF).</p>
+<h3 id="e.-observabilité-commandes-siem">E. Observabilité — commandes
+SIEM</h3>
+<p>Référence complète : <a
+href="../information_logge.md">information_logge.md</a>.</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Démarrer le cluster et Dashboards</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose <span class="at">-f</span> docker-compose-opensearch.yml up <span class="at">-d</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Créer index et modèles SIEM</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ex">./observability/opensearch/setup-siem.sh</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Vérifier santé cluster</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-ks</span> <span class="at">-u</span> admin:<span class="va">$OPENSEARCH_INITIAL_ADMIN_PASSWORD</span> <span class="dt">\</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  https://localhost:9200/_cluster/health</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Dashboards : https://localhost:5601</span></span></code></pre></div>
+<p>Index principaux : <code>microcrm-defects</code>,
+<code>microcrm-security-events</code>,
+<code>microcrm-server-state</code>,
+<code>security-auditlog-*</code>.</p>
+<h3 id="f.-alertes-slack">F. Alertes Slack</h3>
+<ol type="1">
+<li>Créer Incoming Webhook Slack → canal
+<code>#orion-microcrm-alerts</code>.</li>
+<li>GitHub : secret <code>SLACK_WEBHOOK_URL</code>.</li>
+<li>OpenSearch :
+<code>export SLACK_WEBHOOK_URL=... &amp;&amp; ./observability/opensearch/setup-slack-destination.sh</code></li>
+<li>Vérifier : provoquer un échec de workflow ou un spike 5xx de
+test.</li>
+</ol>
+</body>
+</html>

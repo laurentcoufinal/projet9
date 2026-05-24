@@ -69,3 +69,6 @@ for i in $(seq 0 $((DETECTORS - 1))); do
 done
 
 echo "==> Terminé. Ouvrir Dashboards → MicroCRM SOC"
+if [[ -n "${SLACK_WEBHOOK_URL:-}" ]]; then
+  echo "==> SLACK_WEBHOOK_URL défini — exécuter: ./observability/opensearch/setup-slack-destination.sh"
+fi
