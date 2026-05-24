@@ -75,7 +75,7 @@ describe('OrganizationDetailsComponent', () => {
 
     await component.deleteOrg();
 
-    expect(organizationService.deleteById).toHaveBeenCalledWith(4);
+    expect(organizationService.deleteById).toHaveBeenCalledWith(4, jasmine.any(String));
     expect(router.navigate).toHaveBeenCalledWith(['']);
   });
 });
@@ -120,7 +120,7 @@ describe('OrganizationDetailsComponent existing org', () => {
   });
 
   it('should load existing organization', () => {
-    expect(organizationService.fetchById).toHaveBeenCalledWith(2);
+    expect(organizationService.fetchById).toHaveBeenCalledWith(2, jasmine.any(String));
     expect(component.isNew).toBeFalse();
     expect(component.org.name).toBe('Orion');
   });

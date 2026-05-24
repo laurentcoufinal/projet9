@@ -86,13 +86,14 @@ describe('PersonDetailsComponent', () => {
 
     await component.deletePerson();
 
-    expect(personService.deleteById).toHaveBeenCalledWith(5);
+    expect(personService.deleteById).toHaveBeenCalledWith(5, jasmine.any(String));
     expect(router.navigate).toHaveBeenCalledWith(['']);
   });
 
   it('addSelectedOrganization should call service when ids are set', async () => {
     component.person.id = 1;
     component.selectedOrganization = { id: 2, name: 'Org', createdAt: new Date(), persons: [] };
+    organizationService.addPerson.and.resolveTo();
     personService.fetchById.and.resolveTo({
       ...component.person,
       organizations: [],
@@ -100,7 +101,7 @@ describe('PersonDetailsComponent', () => {
 
     await component.addSelectedOrganization();
 
-    expect(organizationService.addPerson).toHaveBeenCalledWith(2, 1);
+    expect(organizationService.addPerson).toHaveBeenCalledWith(2, 1, jasmine.any(String));
   });
 });
 
@@ -151,7 +152,7 @@ describe('PersonDetailsComponent existing person', () => {
   });
 
   it('should load existing person', () => {
-    expect(personService.fetchById).toHaveBeenCalledWith(3);
+    expect(personService.fetchById).toHaveBeenCalledWith(3, jasmine.any(String));
     expect(component.isNew).toBeFalse();
     expect(component.person.firstName).toBe('John');
   });
