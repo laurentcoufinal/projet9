@@ -3,8 +3,9 @@
 | | |
 |---|---|
 | **Titre** | Documentation technique — Industrialisation CI/CD MicroCRM |
+| **Option** | **Option B — Scénario Orion** (entreprise fictive Orion, application MicroCRM) |
 | **Auteur** | LT |
-| **Date** | 17/05/2026 |
+| **Date** | 23/05/2026 (mise à jour) |
 | **Dépôt** | https://github.com/laurentcoufinal/projet9 |
 | **Application** | Orion MicroCRM (Spring Boot 3 + Angular 18) |
 
@@ -25,6 +26,7 @@ Ce projet vise à **industrialiser la chaîne de livraison** : automatisation de
 - Intégrer **SonarCloud** pour la qualité et les vulnérabilités.
 - Standardiser le déploiement avec **Docker** et **Docker Compose**.
 - Documenter les procédures (sécurité, sauvegarde, mises à jour).
+- Mettre en place une **journalisation centralisée** (OpenSearch / SIEM) pour défauts, accès API et événements CI.
 
 ### 1.3 Technologies principales
 
@@ -35,34 +37,25 @@ Ce projet vise à **industrialiser la chaîne de livraison** : automatisation de
 | Conteneurisation | Docker multi-stage, Caddy, Alpine Linux |
 | CI/CD | GitHub Actions, GHCR |
 | Qualité / sécurité | SonarCloud, JaCoCo, Dependabot |
+| Observabilité | OpenSearch 2.x, OpenSearch Dashboards, Fluent Bit ; index `microcrm-defects`, `microcrm-security-events`, `microcrm-server-state` |
+
+**Documents associés :** [definition_test.md](definition_test.md), [domaine.md](domaine.md), [information_logge.md](../information_logge.md), [observability/opensearch/README.md](../observability/opensearch/README.md).
 
 ### 1.4 Pipeline CI/CD — vue d’ensemble
 
-```mermaid
-flowchart LR
-  subgraph ci [CI - push et PR]
-    B[Backend tests]
-    F[Frontend tests]
-    S[SonarCloud]
-    D[Docker build]
-  end
-  subgraph cd [CD - main]
-    P[Push GHCR]
-  end
-  subgraph nightly [Nightly 02h UTC]
-    T[Tests complets]
-    SM[Smoke Docker]
-  end
-  B --> S
-  F --> S
-  S --> D
-  D --> P
-  T --> SM
-```
+**Schéma (draw.io) :** [`diagrams/pipeline-cicd-overview.drawio`](diagrams/pipeline-cicd-overview.drawio) — ouvrir avec [diagrams.net](https://app.diagrams.net) ou l’extension Draw.io de VS Code. Pour le PDF, exporter en PNG depuis draw.io (*Fichier → Exporter → PNG*).
+
+| Zone | Contenu |
+|------|---------|
+| **CI** (push / PR) | `backend` et `frontend` en parallèle → `sonarcloud` → `docker` ; indexation OpenSearch optionnelle après Sonar/Docker |
+| **CD** (`main`) | Publication des images sur GHCR après CI réussi |
+| **Nightly** (02h UTC) | Tests complets → smoke Docker Compose |
+
+Les jobs `sonarcloud` et `docker` peuvent indexer un événement de sécurité dans OpenSearch (`index-ci-event.sh`) si `OPENSEARCH_URL` et `OPENSEARCH_PASSWORD` sont configurés dans GitHub (étape non bloquante).
 
 **Workflows GitHub :**
 
-- `ci.yml` — build, tests, analyse SonarCloud, construction des images.
+- `ci.yml` — build, tests, analyse SonarCloud, construction des images, indexation CI optionnelle vers OpenSearch.
 - `cd.yml` — publication des images sur GitHub Container Registry après CI réussi sur `main`.
 - `nightly.yml` — exécution planifiée quotidienne (tests + Sonar + smoke test Compose).
 
@@ -107,7 +100,9 @@ flowchart LR
 |-------------------|------|
 | `back/gradlew build test jacocoTestReport` | Compile, teste et produit la couverture Java |
 | `front/npm run test:ci` | Tests unitaires headless + couverture LCOV |
-| `scripts/verify-docker.sh` | Validation locale : build Compose, démarrage, curl API/UI |
+| [`scripts/verify-docker.sh`](scripts/verify-docker.sh) | Validation locale : build Compose, démarrage, curl API/UI |
+| [`../observability/opensearch/setup-siem.sh`](../observability/opensearch/setup-siem.sh) | Initialisation index, modèles et politiques SIEM OpenSearch |
+| [`../observability/opensearch/index-ci-event.sh`](../observability/opensearch/index-ci-event.sh) | Indexation d’événements CI (`sonar.quality_gate`, `docker.build`) |
 | `docker compose up -d` | Orchestration back + front en local |
 
 **Exécution locale du script de vérification :**
@@ -117,7 +112,25 @@ cd P7-FSJA
 ./scripts/verify-docker.sh
 ```
 
-### 2.3 Reproductibilité
+**Initialisation SIEM (stack OpenSearch démarrée) :**
+
+```bash
+# Depuis la racine du dépôt, après docker compose -f docker-compose-opensearch.yml up -d
+./observability/opensearch/setup-siem.sh
+```
+
+### 2.3 Observabilité CI (optionnelle)
+
+Après les jobs `sonarcloud` et `docker` de [`ci.yml`](../.github/workflows/ci.yml), le workflow exécute `index-ci-event.sh` avec `continue-on-error: true` : l’échec d’OpenSearch n’interrompt pas la CI.
+
+| Variable GitHub | Type | Usage |
+|-----------------|------|-------|
+| `OPENSEARCH_URL` | Variable (`vars`) | URL HTTPS du cluster (ex. tunnel ou instance dédiée) |
+| `OPENSEARCH_PASSWORD` | Secret | Mot de passe utilisateur `admin` OpenSearch |
+
+Les valeurs ne doivent **jamais** être commitées dans le dépôt.
+
+### 2.4 Reproductibilité
 
 **Relancer le pipeline :**
 
@@ -127,10 +140,12 @@ cd P7-FSJA
 
 **Gestion des secrets (jamais affichés dans les logs) :**
 
-| Secret | Usage |
-|--------|-------|
+| Secret / variable | Usage |
+|-------------------|-------|
 | `SONAR_TOKEN` | Authentification SonarCloud (à créer sur sonarcloud.io) |
 | `GITHUB_TOKEN` | Fourni automatiquement ; utilisé pour Sonar et push GHCR |
+| `OPENSEARCH_URL` | Variable — URL du cluster pour indexation événements CI |
+| `OPENSEARCH_PASSWORD` | Secret — authentification OpenSearch (admin) |
 
 **Configuration SonarCloud :** fichier [`sonar-project.properties`](sonar-project.properties) — clés `laurentcoufinal_projet9` / organisation `laurentcoufinal` (à aligner avec le projet créé sur SonarCloud).
 
@@ -192,6 +207,12 @@ docker compose --profile standalone up -d
 
 **Note réseau :** le frontend appelle l’API via `http://localhost:8080` ([`config.ts`](front/src/app/config.ts)). Avec les ports publiés sur l’hôte, le navigateur accède correctement à l’API.
 
+**Journalisation conteneurs :** par défaut, les services MicroCRM utilisent le driver **`json-file`** (arrêt propre via `docker compose down`). Pour envoyer les logs vers Fluent Bit, utiliser le profil optionnel :
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.fluent-logs.yml up -d
+```
+
 ### 3.3 Déploiement (GHCR)
 
 Images publiées par le workflow CD :
@@ -208,6 +229,28 @@ docker pull ghcr.io/laurentcoufinal/projet9/orion-microcrm-front:latest
 cd P7-FSJA && docker compose up -d
 ```
 
+### 3.4 Stack observabilité (optionnelle)
+
+Fichier racine [`docker-compose-opensearch.yml`](../docker-compose-opensearch.yml) — indépendant de MicroCRM :
+
+| Service | Rôle | Port hôte |
+|---------|------|-----------|
+| `opensearch-node1` / `node2` | Cluster OpenSearch | 9200 |
+| `opensearch-dashboards` | UI (Security Analytics, Alerting) | 5601 |
+| `fluent-bit` | Collecte logs conteneurs + parsing JSON / lignes `SECURITY` | 24224 |
+
+**Lancement :**
+
+```bash
+# Racine du dépôt — fichier .env requis (OPENSEARCH_INITIAL_ADMIN_PASSWORD, etc.)
+docker compose -f docker-compose-opensearch.yml up -d
+cd P7-FSJA && docker compose up -d
+```
+
+Référence détaillée des index et champs : [information_logge.md](../information_logge.md). Configuration Fluent Bit : [`observability/fluent-bit/`](../observability/fluent-bit/).
+
+Le backend indexe les défauts et les accès sensibles lorsque `opensearch.enabled=true` (désactivé en CI : `OPENSEARCH_ENABLED=false`).
+
 ---
 
 ## 4. Plan de testing périodique
@@ -216,13 +259,37 @@ cd P7-FSJA && docker compose up -d
 
 | Type | Outil | Périmètre |
 |------|-------|-----------|
-| Spécification BDD (Gherkin) | Document de référence | [definition_test.md](definition_test.md) — scénarios `@existant` / `@a_implementer`, traçabilité JUnit/Karma |
-| Unitaires / intégration backend | JUnit 5, Spring Boot Test | `MicroCRMApplicationTests`, `PersonRepositoryIntegrationTest` |
-| Unitaires frontend | Karma, Jasmine, ChromeHeadlessNoSandbox | Composants et services Angular |
+| Spécification BDD (Gherkin) | [definition_test.md](definition_test.md) | 90 scénarios — `@existant` / `@a_implementer`, traçabilité JUnit/Karma |
+| Unitaires domaine backend | JUnit 5 | `PersonTest`, `OrganizationTest` |
+| Intégration persistance | `@DataJpaTest` | `PersonRepositoryIntegrationTest` |
+| Infrastructure web / exceptions | JUnit 5 + Mockito | `RequestIdFilterTest`, `GlobalExceptionHandlerTest` |
+| Observabilité OpenSearch | JUnit 5 + Mockito | `OpenSearch*Test`, `SecurityAccessLogFilterTest` |
+| Démarrage application | `@SpringBootTest` | `MicroCRMApplicationTests`, `OpenSearchConfigTest` |
+| Unitaires frontend | Karma, Jasmine, Chrome headless | 8 fichiers `*.spec.ts` (services, composants, intercepteur) |
 | Couverture | JaCoCo (Java), karma-coverage LCOV (TS) | Alimente SonarCloud |
 | Qualité / sécurité statique | SonarCloud | Code smells, vulnérabilités, hotspots |
-| Smoke infrastructure | `curl` sur stack Docker Compose | Disponibilité API et UI |
-| API REST / E2E (cible) | REST Assured, Playwright (à planifier) | Voir scénarios `@a_implementer` dans [definition_test.md](definition_test.md) |
+| Smoke infrastructure | `curl` sur stack Docker Compose | Job `docker-smoke` (nightly) |
+| API REST / E2E (cible) | REST Assured, Playwright | 17 + 7 scénarios `@a_implementer` — voir §4.1 de [definition_test.md](definition_test.md) |
+
+**Inventaire chiffré (mesures locales, mai 2026) :**
+
+| Métrique | Backend | Frontend |
+|----------|---------|----------|
+| Nombre de tests | **34** (10 classes `*Test.java`) | **34** (8 specs) |
+| Couverture lignes | **~94 %** JaCoCo (246/262) | **~96 %** Karma (128/134) |
+| Objectif SonarCloud | ≥ **80 %** | ≥ **80 %** |
+
+**Tests observabilité et web (§4.1 de definition_test.md) :**
+
+| Classe de test | Scénarios couverts |
+|----------------|-------------------|
+| `RequestIdFilterTest` | Conservation / génération `X-Request-Id` |
+| `GlobalExceptionHandlerTest` | 400, 409, 500, troncature stack, indexation défauts |
+| `OpenSearchPropertiesTest` | Contrat configuration OpenSearch |
+| `OpenSearchConfigTest` | Bean `OpenSearchClient` si `opensearch.enabled=true` |
+| `OpenSearchDefectLoggerTest` | Indexation défauts, résilience |
+| `OpenSearchSecurityEventLoggerTest` | Indexation événements sécurité |
+| `SecurityAccessLogFilterTest` | Journal accès API, IP, User-Agent, chemins Actuator |
 
 ### 4.2 Fréquence d’exécution
 
@@ -230,15 +297,15 @@ cd P7-FSJA && docker compose up -d
 |--------|----------------|
 | **Push / PR** sur `main` | Build, tests back/front, SonarCloud, build Docker |
 | **Nightly** (cron `0 2 * * *` UTC) | Tests complets, Sonar, smoke Compose |
-| **Release** (tag `v*`) | CI complet + images Docker taguées + checklist manuelle |
+| **Publication images** | Déclenchement CD après CI vert sur `main`, ou manuel (`workflow_dispatch`) — pas de workflow dédié aux tags `v*` |
 | **Dependabot** (hebdomadaire) | PR de mise à jour dépendances (Gradle, npm, Actions, Docker) |
 
 ### 4.3 Objectifs et critères
 
 | Objectif | Critère de réussite | Alerte |
 |----------|---------------------|--------|
-| Qualité code | Quality Gate SonarCloud **OK** | Échec job `sonarcloud` |
-| Non-régression | 100 % tests unitaires/intégration verts | Échec `backend` ou `frontend` |
+| Qualité code | Quality Gate SonarCloud **OK** (couverture ≥ 80 % visée) | Échec job `sonarcloud` |
+| Non-régression | 100 % tests unitaires/intégration verts (34 + 34) | Échec `backend` ou `frontend` |
 | Déploiement sain | Healthchecks Compose + curl API | Échec `docker-smoke` |
 | Performance pipeline | Build CI < 15 min (cible) | Notification si dépassement récurrent |
 
@@ -250,10 +317,10 @@ cd P7-FSJA && docker compose up -d
 
 Analyse basée sur les rapports de couverture locaux et les corrections appliquées (mai 2026). Dashboard : https://sonarcloud.io/project/overview?id=laurentcoufinal_projet9
 
-| Indicateur | Avant remédiation | Après remédiation (local) | Objectif Quality Gate |
-|------------|-------------------|---------------------------|------------------------|
-| Couverture backend (lignes) | ~60 % | **~89 %** (JaCoCo, 12 tests) | ≥ 50 % |
-| Couverture frontend (lignes) | ~31 % | **~97 %** (29 tests Karma) | ≥ 50 % |
+| Indicateur | Avant remédiation | Après remédiation (local, mai 2026) | Objectif Quality Gate |
+|------------|-------------------|-------------------------------------|------------------------|
+| Couverture backend (lignes) | ~64 % | **~94 %** (JaCoCo, 34 tests) | ≥ 80 % (projet) ; ≥ 50 % (gate par défaut) |
+| Couverture frontend (lignes) | ~31 % | **~96 %** (34 tests Karma) | ≥ 80 % (projet) ; ≥ 50 % (gate par défaut) |
 | CORS wildcard `*` | Présent | **Corrigé** — origines explicites via `app.cors.allowed-origins` | Hotspot revu |
 | NPE `@PreRemove` | Risque | **Corrigé** — garde `organizations != null` | Bug fermé |
 | Dépendance Gradle dupliquée | Oui | **Corrigée** | Code smell fermé |
@@ -266,7 +333,8 @@ Analyse basée sur les rapports de couverture locaux et les corrections appliqu�
 
 - [`SpringDataRestCustomization.java`](back/src/main/java/com/openclassroom/devops/orion/microcrm/SpringDataRestCustomization.java) : CORS configurable.
 - [`Person.java`](back/src/main/java/com/openclassroom/devops/orion/microcrm/Person.java) : `removeFromOrganization()`, validation Jakarta.
-- Tests : `PersonTest`, `OrganizationTest`, specs Angular avec `HttpTestingController`.
+- Tests : `PersonTest`, `OrganizationTest`, `GlobalExceptionHandlerTest`, `SecurityAccessLogFilterTest`, specs Angular avec `HttpTestingController`.
+- **SIEM (A09)** : `GlobalExceptionHandler` → index `microcrm-defects` ; `SecurityAccessLogFilter` → index `microcrm-security-events` ; corrélation via `X-Request-Id` ([`RequestIdFilter`](back/src/main/java/com/openclassroom/devops/orion/microcrm/web/RequestIdFilter.java)).
 - Types HAL typés dans [`models.ts`](front/src/app/models.ts) ; `API_BASE_URL` via [`environment.ts`](front/src/environments/environment.ts).
 - Migration **Angular 18.2.14** : `ng update @angular/core@18 @angular/cli@18` ; providers HTTP (`provideHttpClient`) dans les specs.
 - Rapports npm : [`front/audit-avant.txt`](front/audit-avant.txt), [`front/audit-apres.txt`](front/audit-apres.txt).
@@ -290,7 +358,7 @@ Le pipeline transmet les rapports aux chemins définis dans [`sonar-project.prop
 | A06 — Composants vulnérables | **Moyen/Élevé** | npm audit signale des vulnérabilités ; Dependabot hebdomadaire |
 | A07 — Identification / auth | N/A (hors périmètre actuel) | — |
 | A08 — Intégrité logicielle | Faible | CI sur GitHub, images signées par registre GHCR |
-| A09 — Journalisation | Moyen | Index `microcrm-defects`, `microcrm-security-events`, `microcrm-server-state` ; dashboard SOC, Alerting, Security Analytics ; audit OpenSearch (`security-auditlog-*`) |
+| A09 — Journalisation | **Renforcé** | Index `microcrm-defects`, `microcrm-security-events`, `microcrm-server-state` ; filtres back + Fluent Bit ; dashboards Security Analytics / Alerting ; audit OpenSearch (`security-auditlog-*`) — voir [information_logge.md](../information_logge.md) |
 | A10 — SSRF | Faible | Pas d’appels HTTP sortants dynamiques côté API |
 
 **Risques pipeline :**
@@ -304,9 +372,10 @@ Le pipeline transmet les rapports aux chemins définis dans [`sonar-project.prop
 | Priorité | Action | Statut |
 |----------|--------|--------|
 | **Immédiat** | Configurer `SONAR_TOKEN` ; corriger CORS, NPE, smells Gradle | Fait (code) |
-| **Immédiat** | Renforcer tests back/front pour couverture Quality Gate | Fait (12 tests Java, specs enrichies) |
+| **Immédiat** | Renforcer tests back/front pour couverture Quality Gate (≥ 80 %) | **Fait** (34 tests Java, 34 Karma, ~94 % / ~96 %) |
+| **Immédiat** | Tests observabilité (handlers, filtres, loggers OpenSearch) | **Fait** — voir [definition_test.md](definition_test.md) §4.1 |
 | **Court terme** | Migration Angular 18.2.14 + `npm audit fix` | Fait ; audit npm résiduel documenté |
-| **Court terme** | Activer Quality Gate bloquante en CI après premier scan vert | À faire sur SonarCloud |
+| **Court terme** | Activer Quality Gate bloquante en CI après premier scan vert | **À faire** sur SonarCloud |
 | **Moyen terme** | Spring Security si exposition réseau élargie | Planifié |
 | **Long terme** | Trivy, WAF, base persistante chiffrée | Planifié |
 
@@ -325,23 +394,26 @@ Calculées à partir de l’historique GitHub Actions (onglet *Insights* → *Ac
 | **MTTR** | Temps moyen de rétablissement après échec CI | Durée entre échec et premier run vert |
 | **Change Failure Rate** | % de déploiements entraînant un rollback ou hotfix | Échecs `cd` / total déploiements |
 
-*Valeurs observées : à renseigner après 2–4 semaines d’exploitation.*
+*Valeurs observées : à renseigner manuellement depuis GitHub → Insights → Actions (aucun script d’export DORA dans le dépôt à ce jour).*
 
 ### 6.2 KPI personnalisés
 
-| KPI | Cible indicative |
-|-----|------------------|
-| Durée job `backend` | < 3 min |
-| Durée job `frontend` | < 5 min |
-| Durée job `sonarcloud` | < 4 min |
-| Durée build Docker | < 10 min |
-| Taux d’échec CI sur 30 jours | < 10 % |
+| KPI | Cible indicative | Source |
+|-----|------------------|--------|
+| Durée job `backend` | < 3 min | GitHub Actions |
+| Durée job `frontend` | < 5 min | GitHub Actions |
+| Durée job `sonarcloud` | < 4 min | GitHub Actions |
+| Durée build Docker | < 10 min | GitHub Actions |
+| Durée smoke nightly (`docker-smoke`) | < 5 min | `nightly.yml` |
+| Taux d’échec CI sur 30 jours | < 10 % | Insights Actions |
+| Disponibilité index OpenSearch | Cluster `green` ou `yellow` | `/_cluster/health` ou Dashboards |
 
 ### 6.3 Synthèse monitoring
 
-- **Points forts :** parallélisation back/front, cache Gradle/npm, healthchecks Compose.
-- **Points à améliorer :** métriques DORA automatisées (export API GitHub), alerting (Slack/e-mail sur échec nightly).
-- **Dashboards :** SonarCloud (qualité), GitHub Actions (CI), GHCR (versions images).
+- **Points forts :** parallélisation back/front, cache Gradle/npm, healthchecks Compose, SIEM OpenSearch (défauts + accès + logs conteneurs), indexation événements CI optionnelle.
+- **Points à améliorer :** métriques DORA automatisées (export API GitHub), alerting Slack/e-mail sur échec nightly (**non implémenté**), smoke OpenSearch dans la CI nightly.
+- **Dashboards :** SonarCloud (qualité), GitHub Actions (CI), GHCR (versions images), OpenSearch Dashboards (Security Analytics, Alerting, Discover) — port **5601** si stack observabilité démarrée.
+- **Référence opérationnelle :** [information_logge.md](../information_logge.md), [observability/opensearch/README.md](../observability/opensearch/README.md).
 
 ---
 
@@ -353,8 +425,10 @@ Calculées à partir de l’historique GitHub Actions (onglet *Insights* → *Ac
 |---------|-----------|----------|
 | Code source (Git) | Haute | Source de vérité sur GitHub |
 | Workflows / config CI | Haute | `.github/workflows/`, `docker-compose.yml`, `sonar-project.properties` |
+| Config observabilité | Moyenne | `observability/`, `docker-compose-opensearch.yml`, `.env` (hors repo) |
 | Artefacts build | Moyenne | JAR, images Docker sur GHCR |
 | Données CRM | **Basse** (démo) | HSQLDB **en mémoire** — perdues au redémarrage |
+| Indices OpenSearch | Moyenne (si SIEM actif) | Export snapshot ou reindex — voir doc OpenSearch |
 | Rapports Sonar | Moyenne | Export PDF / captures depuis SonarCloud |
 
 ### 7.2 Procédure de sauvegarde
@@ -364,6 +438,7 @@ Calculées à partir de l’historique GitHub Actions (onglet *Insights* → *Ac
 | Dépôt Git | Continu (push) | `git push origin main` |
 | Images Docker | À chaque CD réussi | Automatique GHCR ; export local : `docker save -o microcrm-back.tar orion-microcrm-back:latest` |
 | Configuration | Hebdomadaire | Tag Git `backup-YYYY-MM-DD` ou branche archive |
+| Config observabilité | À chaque changement SIEM | Commit `observability/` + copie `.env` sécurisée |
 | Rapport Sonar | Mensuel | Export depuis l’interface SonarCloud |
 
 ### 7.3 Procédure de restauration
@@ -375,7 +450,7 @@ Calculées à partir de l’historique GitHub Actions (onglet *Insights* → *Ac
 3. `docker compose down && docker compose up -d`.
 4. Vérifier : `curl http://localhost:8080/persons`.
 
-**Limitations :** aucune restauration de données métier (base volatile). Les fixtures Spring rechargent les données de démo au démarrage.
+**Limitations :** aucune restauration de données métier (base volatile). Les fixtures Spring rechargent les données de démo au démarrage. Les indices OpenSearch ne sont pas sauvegardés automatiquement par le pipeline.
 
 ---
 
@@ -411,24 +486,53 @@ Calculées à partir de l’historique GitHub Actions (onglet *Insights* → *Ac
 - Pipeline CI/CD complet sur GitHub Actions (build, tests, SonarCloud, Docker).
 - Orchestration **Docker Compose** avec healthchecks et script de validation.
 - Publication automatisée des images sur **GHCR**.
-- Tests **nightly** et alertes Dependabot.
-- Documentation opérationnelle et plans sécurité / sauvegarde / testing.
+- Tests **nightly** (smoke Compose) et alertes Dependabot.
+- **SIEM OpenSearch** : défauts API, journal d’accès, logs conteneurs, événements CI.
+- Couverture de tests **≥ 80 %** (backend ~94 %, frontend ~96 %) — objectif SonarCloud atteint localement.
+- Documentation opérationnelle : [definition_test.md](definition_test.md), [information_logge.md](../information_logge.md), plans sécurité / sauvegarde / testing.
 
-### 9.2 Gains attendus
+### 9.2 Gains observés / attendus
 
 | Dimension | Gain |
 |-----------|------|
-| Fiabilité | Tests systématiques avant merge |
+| Fiabilité | 34 + 34 tests systématiques avant merge ; smoke nightly |
 | Rapidité | Builds parallèles, cache, images prêtes à déployer |
-| Qualité | SonarCloud + couverture de code |
-| Sécurité | Analyse statique, gestion des secrets, suivi OWASP |
+| Qualité | SonarCloud + couverture JaCoCo/LCOV |
+| Sécurité | Analyse statique, SIEM, corrélation `X-Request-Id`, suivi OWASP |
+| Observabilité | Dashboards OpenSearch, indexation défauts et accès sensibles |
 
 ### 9.3 Recommandations
 
-1. Finaliser la configuration SonarCloud et activer la Quality Gate bloquante.
-2. Traiter les vulnérabilités npm signalées par `npm audit`.
-3. Ajouter l’authentification avant toute mise en production externe.
-4. Automatiser le tableau de bord DORA (script sur API GitHub).
+1. Activer la Quality Gate bloquante sur SonarCloud après validation du prochain scan CI.
+2. Implémenter les scénarios `@a_implementer` : tests API REST (17) et E2E (7) — voir [definition_test.md](definition_test.md).
+3. Traiter les vulnérabilités npm signalées par `npm audit` (Dependabot / migration Angular 19+).
+4. Ajouter Spring Security avant toute exposition Internet.
+5. Automatiser le tableau de bord DORA (script API GitHub) et l’alerting sur échec nightly.
+
+---
+
+## 10. Écarts projet / template (manques identifiés)
+
+Éléments prévus par le template ou le CDC mais **absents ou incomplets** dans le dépôt :
+
+| Chapitre | Manque | Gravité | Piste de remédiation |
+|----------|--------|---------|----------------------|
+| §4 Tests | 17 scénarios API REST `@a_implementer` | Haute | REST Assured / `TestRestTemplate` dans `back/src/test/.../api/` |
+| §4 Tests | 7 scénarios E2E Playwright/Cypress | Haute | `P7-FSJA/e2e/` |
+| §4 Tests | 6 scénarios UI dashboard `@a_implementer` | Moyenne | Enrichir `main-dashboard.component.spec.ts` |
+| §4 Tests | Intégration OpenSearch réelle (hors mocks) | Moyenne | Testcontainers OpenSearch |
+| §4 Tests | Workflow release sur tags `v*` | Faible | Job `on: push: tags` |
+| §5 Sécurité | Authentification / Spring Security | Haute (prod) | Accepté pour démo interne |
+| §5 Sécurité | Scan images Trivy | Moyenne | Job CI dédié |
+| §5 Sécurité | Quality Gate Sonar bloquante confirmée | Moyenne | Configuration SonarCloud |
+| §5 Sécurité | Vulnérabilités npm résiduelles | Moyenne | Dependabot, Angular 19+ |
+| §6 Monitoring | Valeurs DORA mesurées / export auto | Moyenne | Script API GitHub Actions |
+| §6 Monitoring | Alerting Slack/e-mail (nightly) | Faible | Webhook `if: failure()` |
+| §3 Déploiement | Base persistante (HSQLDB mémoire) | Faible (démo) | PostgreSQL + volume Docker |
+| §6 Monitoring | Smoke OpenSearch dans CI | Faible | Job nightly optionnel |
+| Annexes | Captures SonarCloud réelles | Faible | Post-scan CI sur `main` |
+
+**Déjà conforme au template :** CI/CD GitHub Actions, SonarCloud, JaCoCo/LCOV, Docker multi-stage, Compose + healthchecks, Dependabot, nightly + smoke, SIEM OpenSearch, documentation README et plans sécurité/sauvegarde.
 
 ---
 
@@ -452,11 +556,15 @@ Calculées à partir de l’historique GitHub Actions (onglet *Insights* → *Ac
 # Tests backend
 cd P7-FSJA/back && ./gradlew test jacocoTestReport
 
-# Tests frontend (CI)
+# Tests frontend (CI — Chrome requis)
 cd P7-FSJA/front && npm run test:ci
 
-# Stack complète
+# Stack MicroCRM
 cd P7-FSJA && docker compose up -d
+
+# Stack observabilité (racine dépôt)
+docker compose -f docker-compose-opensearch.yml up -d
+./observability/opensearch/setup-siem.sh
 
 # Vérification automatisée
 ./P7-FSJA/scripts/verify-docker.sh
@@ -464,11 +572,35 @@ cd P7-FSJA && docker compose up -d
 
 ### C. Captures SonarCloud
 
-*Insérer ici les captures d’écran du tableau de bord SonarCloud après le premier scan réussi.*
+*Insérer ici les captures d’écran du tableau de bord SonarCloud après le prochain scan CI réussi sur `main` (couverture, Quality Gate, vulnérabilités).*
 
 ### D. Export PDF
 
 ```bash
-# Exemple avec Pandoc (si installé)
+# Exemple avec Pandoc (pdflatex ou xelatex requis pour le PDF)
 pandoc P7-FSJA/documentation-technique.md -o documentation-technique.pdf --toc
+# Alternative sans LaTeX : export HTML puis impression navigateur
+pandoc P7-FSJA/documentation-technique.md -o documentation-technique.html --toc --standalone
 ```
+
+Volume estimé : ~4 000 mots / 619 lignes — conforme à la cible CDC (10–15 pages PDF).
+
+### E. Observabilité — commandes SIEM
+
+Référence complète : [information_logge.md](../information_logge.md).
+
+```bash
+# Démarrer le cluster et Dashboards
+docker compose -f docker-compose-opensearch.yml up -d
+
+# Créer index et modèles SIEM
+./observability/opensearch/setup-siem.sh
+
+# Vérifier santé cluster
+curl -ks -u admin:$OPENSEARCH_INITIAL_ADMIN_PASSWORD \
+  https://localhost:9200/_cluster/health
+
+# Dashboards : https://localhost:5601
+```
+
+Index principaux : `microcrm-defects`, `microcrm-security-events`, `microcrm-server-state`, `security-auditlog-*`.

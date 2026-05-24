@@ -1,3 +1,11 @@
+# Template — Documentation technique
+
+> **Document rempli :** la documentation technique complète du projet Orion MicroCRM (Option B) se trouve dans **[P7-FSJA/documentation-technique.md](P7-FSJA/documentation-technique.md)**.
+>
+> Export PDF : `pandoc P7-FSJA/documentation-technique.md -o documentation-technique.pdf --toc`
+
+---
+
 TEMPLATE DE DOCUMENTATION TECHNIQUE 
 Page de titre
     • Titre du document : Documentation technique – [nom du projet]
@@ -123,4 +131,3 @@ Annexes (optionnelles)
     • Captures de logs (si monitoring Option B)
     • Extraits de workflows
     • Commandes utiles
-

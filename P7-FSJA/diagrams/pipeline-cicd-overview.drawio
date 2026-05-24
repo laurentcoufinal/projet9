@@ -1,0 +1,68 @@
+<mxfile host="65bd71144e">
+    <diagram id="pipeline-cicd-overview" name="Pipeline CI/CD">
+        <mxGraphModel dx="1306" dy="793" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="lane-ci" value="CI — push et PR" style="swimlane;horizontal=0;startSize=28;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="40" width="520" height="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="b-backend" value="Backend tests&#10;(gradlew test)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-ci" vertex="1">
+                    <mxGeometry x="43" y="50" width="120" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="b-frontend" value="Frontend tests&#10;(npm test:ci)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-ci" vertex="1">
+                    <mxGeometry x="43" y="130" width="120" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="b-sonar" value="SonarCloud&#10;(analyse qualité)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-ci" vertex="1">
+                    <mxGeometry x="199" y="90" width="120" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="b-docker" value="Docker build&#10;(compose build)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-ci" vertex="1">
+                    <mxGeometry x="359" y="130" width="120" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="b-opensearch" value="Index événements CI&#10;(OpenSearch, optionnel)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-ci" vertex="1">
+                    <mxGeometry x="359" y="50" width="140" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-ci" target="b-sonar" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="159" y="75" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-ci" target="b-sonar" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="159" y="155" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-ci" source="b-sonar" target="b-opensearch" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-ci" source="b-sonar" target="b-docker" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="note-par" value="backend ∥ frontend" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-ci" vertex="1">
+                    <mxGeometry x="39" y="6" width="120" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="lane-cd" value="CD — main" style="swimlane;horizontal=0;startSize=28;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="1" vertex="1">
+                    <mxGeometry x="580" y="40" width="200" height="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="b-ghcr" value="Push GHCR&#10;(images Docker)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-cd" vertex="1">
+                    <mxGeometry x="30" y="90" width="130" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="lane-nightly" value="Nightly — 02h UTC" style="swimlane;horizontal=0;startSize=28;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="280" width="740" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="b-nightly-tests" value="Tests complets&#10;(back + front + Sonar)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-nightly" vertex="1">
+                    <mxGeometry x="38" y="45" width="160" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="b-smoke" value="Smoke Docker&#10;(compose up + curl)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-nightly" vertex="1">
+                    <mxGeometry x="240" y="45" width="160" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-nightly" source="b-nightly-tests" target="b-smoke" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="1" source="b-docker" target="b-ghcr" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
