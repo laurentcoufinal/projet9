@@ -1,18 +1,14 @@
 name: CI
 
+# paths et paths-ignore ne peuvent pas coexister sur un même événement (GitHub).
+# paths-ignore seul : le workflow ne démarre pas si le commit ne modifie que des .md.
 on:
   push:
     branches: [main]
-    paths:
-      - "P7-FSJA/**"
-      - ".github/workflows/**"
     paths-ignore:
       - "**/*.md"
   pull_request:
     branches: [main]
-    paths:
-      - "P7-FSJA/**"
-      - ".github/workflows/**"
     paths-ignore:
       - "**/*.md"
 
