@@ -1,0 +1,23 @@
+{
+  "index_patterns": ["microcrm-defects*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 1
+    },
+    "mappings": {
+      "properties": {
+        "timestamp": { "type": "date" },
+        "requestId": { "type": "keyword" },
+        "level": { "type": "keyword" },
+        "message": { "type": "text" },
+        "exceptionType": { "type": "keyword" },
+        "stackTrace": { "type": "text" },
+        "path": { "type": "keyword" },
+        "method": { "type": "keyword" },
+        "status": { "type": "integer" },
+        "bootstrap": { "type": "boolean" }
+      }
+    }
+  }
+}

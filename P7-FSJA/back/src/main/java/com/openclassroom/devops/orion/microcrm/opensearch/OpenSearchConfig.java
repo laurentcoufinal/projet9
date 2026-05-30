@@ -11,12 +11,16 @@ import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.nio.ssl.TlsStrategy;
 import org.apache.hc.core5.ssl.SSLContextBuilder;
+import org.opensearch.client.json.jackson.JacksonJsonpMapper;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.transport.OpenSearchTransport;
 import org.opensearch.client.transport.httpclient5.ApacheHttpClient5TransportBuilder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 @Configuration
 @ConditionalOnProperty(name = "opensearch.enabled", havingValue = "true")
@@ -43,6 +47,8 @@ public class OpenSearchConfig {
                 .build();
 
         ApacheHttpClient5TransportBuilder builder = ApacheHttpClient5TransportBuilder.builder(host);
+        builder.setMapper(new JacksonJsonpMapper(
+                JsonMapper.builder().addModule(new JavaTimeModule()).build()));
         builder.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder
                 .setDefaultCredentialsProvider(credentialsProvider)
                 .setConnectionManager(PoolingAsyncClientConnectionManagerBuilder.create()

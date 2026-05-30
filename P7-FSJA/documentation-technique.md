@@ -666,6 +666,8 @@ Volume estimé : ~4 000 mots / 619 lignes — conforme à la cible CDC (10–15 
 
 ### E. Observabilité — commandes SIEM
 
+**Tutoriel dashboard :** [observability/opensearch/TUTORIEL-DASHBOARD.md](../observability/opensearch/TUTORIEL-DASHBOARD.md) — guide pas-à-pas pour le tableau de bord **MicroCRM SOC**.
+
 Référence complète : [information_logge.md](../information_logge.md).
 
 ```bash

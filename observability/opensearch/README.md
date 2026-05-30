@@ -1,9 +1,12 @@
 # SIEM OpenSearch — MicroCRM
 
+**Tutoriel pas-à-pas :** [TUTORIEL-DASHBOARD.md](TUTORIEL-DASHBOARD.md) — configuration du dashboard **MicroCRM SOC** en local.
+
 ## Contenu
 
 | Fichier | Rôle |
 |---------|------|
+| `TUTORIEL-DASHBOARD.md` | Guide débutant — stack, index, dashboard, KPI, dépannage |
 | `setup-siem.sh` | Index template, import Dashboards, moniteurs Alerting, détecteurs Security Analytics |
 | `saved-objects.ndjson` | Index patterns + dashboard **MicroCRM SOC** |
 | `alerting-monitors.json` | Spike 5xx, spike 4xx, health down, suppressions massives DELETE |

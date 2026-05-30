@@ -1,0 +1,19 @@
+{
+  "index_patterns": ["microcrm-server-state*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 1
+    },
+    "mappings": {
+      "properties": {
+        "@timestamp": { "type": "date" },
+        "timestamp": { "type": "date" },
+        "event_type": { "type": "keyword" },
+        "source": { "type": "keyword" },
+        "status": { "type": "keyword" },
+        "bootstrap": { "type": "boolean" }
+      }
+    }
+  }
+}
