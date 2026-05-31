@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="pipeline-cicd-overview" name="Pipeline CI/CD">
-        <mxGraphModel dx="1306" dy="793" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+        <mxGraphModel dx="1257" dy="587" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="980" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -25,11 +25,19 @@
                 <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-ci" target="b-sonar" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="159" y="75" as="sourcePoint"/>
+                        <Array as="points">
+                            <mxPoint x="200" y="75"/>
+                            <mxPoint x="200" y="50"/>
+                            <mxPoint x="259" y="50"/>
+                        </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-ci" target="b-sonar" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="159" y="155" as="sourcePoint"/>
+                        <Array as="points">
+                            <mxPoint x="259" y="155"/>
+                        </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-ci" source="b-sonar" target="b-opensearch" edge="1">
@@ -51,16 +59,43 @@
                     <mxGeometry x="40" y="280" width="740" height="120" as="geometry"/>
                 </mxCell>
                 <mxCell id="b-nightly-tests" value="Tests complets&#10;(back + front + Sonar)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-nightly" vertex="1">
-                    <mxGeometry x="38" y="45" width="160" height="50" as="geometry"/>
+                    <mxGeometry x="280" y="45" width="160" height="50" as="geometry"/>
                 </mxCell>
                 <mxCell id="b-smoke" value="Smoke Docker&#10;(compose up + curl)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-nightly" vertex="1">
-                    <mxGeometry x="240" y="45" width="160" height="50" as="geometry"/>
+                    <mxGeometry x="530" y="45" width="160" height="50" as="geometry"/>
                 </mxCell>
                 <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-nightly" source="b-nightly-tests" target="b-smoke" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="1" source="b-docker" target="b-ghcr" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="title-main" value="CI · CD · Nightly · Dependabot — projet9 / P7-FSJA" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=14;fontStyle=1;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="8" width="520" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="lane-dependabot" value="Dependabot —&#10;hebdomadaire (PR)" style="swimlane;horizontal=0;startSize=28;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="420" width="740" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="b-dependabot" value="Dependabot&#10;lundi · dependabot.yml" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-dependabot" vertex="1">
+                    <mxGeometry x="38" y="45" width="140" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="b-dependabot-pr" value="PR de mise à jour&#10;Gradle · npm · GitHub Actions · Docker" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-dependabot" vertex="1">
+                    <mxGeometry x="300" y="45" width="220" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="lane-dependabot" source="b-dependabot" target="b-dependabot-pr" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e8" value="pull_request" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;fontColor=#0d0d0d;labelBackgroundColor=#f7f7f8;" parent="1" source="b-dependabot-pr" target="b-backend" edge="1">
+                    <mxGeometry x="-0.3627" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="230" y="480"/>
+                            <mxPoint x="230" y="130"/>
+                        </Array>
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="note-dependabot" value="Dependabot : pas de workflow dédié ; les PR déclenchent ci.yml" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor=#666666;labelBackgroundColor=#f7f7f8;" parent="1" vertex="1">
+                    <mxGeometry x="180" y="580" width="480" height="20" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>

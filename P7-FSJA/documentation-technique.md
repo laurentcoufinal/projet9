@@ -58,6 +58,7 @@ Ce projet vise à **industrialiser la chaîne de livraison** : automatisation de
 | **CI** (push / PR) | `backend` et `frontend` en parallèle → `sonarcloud` → `docker` ; indexation OpenSearch optionnelle après Sonar/Docker |
 | **CD** (`main`) | Publication des images sur GHCR après CI réussi |
 | **Nightly** (02h UTC) | Tests complets → smoke Docker Compose |
+| **Dependabot** (hebdo) | PR automatiques (Gradle, npm, Actions, Docker) → déclenche la **CI** sur `pull_request` |
 
 Les jobs `sonarcloud` et `docker` peuvent indexer un événement de sécurité dans OpenSearch (`index-ci-event.sh`) si `OPENSEARCH_URL` et `OPENSEARCH_PASSWORD` sont configurés dans GitHub (étape non bloquante).
 
