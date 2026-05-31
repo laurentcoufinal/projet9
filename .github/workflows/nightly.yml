@@ -135,7 +135,18 @@ jobs:
 
       - name: Check frontend
         run: |
-          curl -sfL -o /dev/null http://localhost:80/ || curl -sfk -o /dev/null https://localhost:443/
+          for i in $(seq 1 30); do
+            # HTTP sans -L : évite la redirection HTTPS (cert local → curl exit 35)
+            if curl -sf -o /dev/null http://localhost:80/ 2>/dev/null \
+              || curl -sfk -o /dev/null https://localhost:443/ 2>/dev/null; then
+              echo "Frontend is ready"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Frontend failed to respond after 150 seconds"
+          docker compose -f P7-FSJA/docker-compose.yml logs front
+          exit 1
 
       - name: Tear down
         if: always()
