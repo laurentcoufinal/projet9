@@ -104,8 +104,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Prepare compose environment
+        working-directory: .
+        env:
+          OPENSEARCH_PASSWORD: ${{ secrets.OPENSEARCH_PASSWORD }}
+          OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${{ secrets.OPENSEARCH_PASSWORD }}
+        run: |
+          chmod +x scripts/prepare-compose-env.sh
+          ./scripts/prepare-compose-env.sh
+
       - name: Build and start stack
         working-directory: P7-FSJA
+        env:
+          OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${{ secrets.OPENSEARCH_PASSWORD }}
+          OPENSEARCH_PASSWORD: ${{ secrets.OPENSEARCH_PASSWORD }}
         run: |
           docker compose build
           docker compose up -d

@@ -1,0 +1,6 @@
+{"sessionId":"7ecea8","runId":"pre-fix","hypothesisId":"A","location":"prepare-compose-env.sh","message":"start","data":{"env_file_exists": true, "has_initial_in_env": false, "has_password_in_env": false},"timestamp":1780233645251}
+{"sessionId":"7ecea8","runId":"pre-fix","hypothesisId":"B","location":"prepare-compose-env.sh","message":"use_existing_env_file","data":{"source": "file", "password_set": true},"timestamp":1780233645262}
+{"sessionId":"7ecea8","runId":"pre-fix","hypothesisId":"A","location":"prepare-compose-env.sh","message":"start","data":{"env_file_exists": false, "has_initial_in_env": false, "has_password_in_env": true},"timestamp":1780233662965}
+{"sessionId":"7ecea8","runId":"pre-fix","hypothesisId":"D","location":"prepare-compose-env.sh","message":"resolved_from_secret_or_env","data":{"source": "env_var", "env_file_existed": false, "will_write": true},"timestamp":1780233662977}
+{"sessionId":"7ecea8","runId":"pre-fix","hypothesisId":"A","location":"prepare-compose-env.sh","message":"start","data":{"env_file_exists": false, "has_initial_in_env": false, "has_password_in_env": false},"timestamp":1780233681299}
+{"sessionId":"7ecea8","runId":"pre-fix","hypothesisId":"C","location":"prepare-compose-env.sh","message":"missing_password","data":{"env_file_exists": false, "resolved": false},"timestamp":1780233681311}

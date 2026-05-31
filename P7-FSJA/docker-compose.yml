@@ -13,12 +13,13 @@ services:
       target: back
     image: orion-microcrm-back:latest
     env_file:
-      - ../.env
+      - path: ../.env
+        required: false
     environment:
       OPENSEARCH_HOST: host.docker.internal
       OPENSEARCH_PORT: "9200"
       OPENSEARCH_USERNAME: admin
-      OPENSEARCH_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      OPENSEARCH_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD:-${OPENSEARCH_PASSWORD:-}}
       OPENSEARCH_ENABLED: "true"
       OPENSEARCH_SECURITY_ACCESS_LOG: "true"
     extra_hosts:
