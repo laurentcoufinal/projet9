@@ -37,7 +37,7 @@ Ce projet vise à **industrialiser la chaîne de livraison** : automatisation de
 | Conteneurisation | Docker multi-stage, Caddy, Alpine Linux |
 | CI/CD | GitHub Actions, GHCR |
 | Qualité / sécurité | SonarCloud, JaCoCo, Dependabot |
-| Observabilité | OpenSearch 2.x, OpenSearch Dashboards, Fluent Bit ; index `microcrm-defects`, `microcrm-security-events`, `microcrm-server-state` |
+| Observabilité | OpenSearch 2.x, OpenSearch Dashboards, Fluent Bit, `dora-sync` ; index `microcrm-defects`, `microcrm-security-events`, `microcrm-server-state`, `microcrm-dora-metrics` |
 
 **Équivalence stack ELK (demande Maria) :** la stack « ELK » est mise en œuvre en **open source** sans cloud obligatoire :
 
@@ -45,7 +45,7 @@ Ce projet vise à **industrialiser la chaîne de livraison** : automatisation de
 |---------------|------|-------------------------|
 | **E**lasticsearch | Stockage et recherche | **OpenSearch** (cluster Docker) |
 | **L**ogstash | Collecte / transformation | **Fluent Bit** (logs conteneurs + parser JSON) |
-| **K**ibana | Visualisation | **OpenSearch Dashboards** (dashboard **MicroCRM SOC**) |
+| **K**ibana | Visualisation | **OpenSearch Dashboards** (dashboards **MicroCRM SOC** et **MicroCRM DORA**) |
 
 **Documents associés :** [definition_test.md](definition_test.md), [domaine.md](domaine.md), [information_logge.md](../information_logge.md), [observability/opensearch/README.md](../observability/opensearch/README.md).
 
@@ -115,8 +115,9 @@ Les jobs `sonarcloud` et `docker` peuvent indexer un événement de sécurité d
 | [`../observability/opensearch/setup-slack-destination.sh`](../observability/opensearch/setup-slack-destination.sh) | Destination Alerting + actions Slack sur moniteurs P0 |
 | [`../scripts/notify-slack.sh`](../scripts/notify-slack.sh) | Notification Slack (CI / nightly en échec) |
 | [`../scripts/export-dora-metrics.sh`](../scripts/export-dora-metrics.sh) | Export métriques DORA depuis GitHub Actions |
+| [`../observability/opensearch/sync-dora-from-github.sh`](../observability/opensearch/sync-dora-from-github.sh) | Sync historique GitHub Actions → index `microcrm-dora-metrics` |
 | [`../observability/scripts/health-status.sh`](../observability/scripts/health-status.sh) | Rapport santé cluster + API + CI |
-| `docker compose up -d` | Orchestration back + front en local |
+| `docker compose --env-file ../.env up -d` | Orchestration back + front en local (indexation OpenSearch) |
 
 **Exécution locale du script de vérification :**
 
@@ -128,7 +129,8 @@ cd P7-FSJA
 **Initialisation SIEM (stack OpenSearch démarrée) :**
 
 ```bash
-# Depuis la racine du dépôt, après docker compose -f docker-compose-opensearch.yml up -d
+# Depuis la racine du dépôt, après docker compose -f docker-compose-opensearch.yml up -d --build
+export OPENSEARCH_PASSWORD="$(grep OPENSEARCH_INITIAL_ADMIN_PASSWORD .env | cut -d= -f2-)"
 ./observability/opensearch/setup-siem.sh
 ```
 
@@ -167,6 +169,33 @@ Les valeurs ne doivent **jamais** être commitées dans le dépôt.
 
 ## 3. Plan de conteneurisation et de déploiement
 
+### 3.0 Démarrage complet (recommandé)
+
+Procédure canonique pour lancer **MicroCRM + OpenSearch + dashboards SOC/DORA** depuis la **racine du dépôt** (`projet9/`). Le fichier `.env` doit y être présent (pas seulement dans `P7-FSJA/`).
+
+**Prérequis `.env` :** `OPENSEARCH_INITIAL_ADMIN_PASSWORD`, `OPENSEARCH_PASSWORD` (même valeur), `OPENSEARCH_ENABLED=true` ; pour le dashboard DORA : `GITHUB_TOKEN` (PAT Actions read), optionnellement `GITHUB_REPOSITORY`, `DORA_SYNC_DAYS`, `DORA_SYNC_CRON`.
+
+```bash
+# Racine du dépôt
+cp .env.example .env   # éditer mot de passe + GITHUB_TOKEN
+
+docker compose -f docker-compose-opensearch.yml up -d --build
+
+export OPENSEARCH_PASSWORD="$(grep OPENSEARCH_INITIAL_ADMIN_PASSWORD .env | cut -d= -f2-)"
+./observability/opensearch/setup-siem.sh
+
+cd P7-FSJA && docker compose --env-file ../.env up -d
+```
+
+| Service | URL |
+|---------|-----|
+| API MicroCRM | http://localhost:8080/persons |
+| UI MicroCRM | https://localhost |
+| OpenSearch API | https://localhost:9200 |
+| OpenSearch Dashboards | http://localhost:5601 — **MicroCRM SOC** + **MicroCRM DORA** (période **Last 90 days** pour DORA) |
+
+Vérification : `docker logs dora-sync`, `curl -f http://localhost:8080/persons`.
+
 ### 3.1 Dockerfiles
 
 Le [`Dockerfile`](Dockerfile) utilise un **build multi-stage** :
@@ -204,14 +233,18 @@ Le [`Dockerfile`](Dockerfile) utilise un **build multi-stage** :
 
 **Lancement local :**
 
+Avec la stack OpenSearch (voir [§3.0](#30-démarrage-complet-recommandé)) :
+
 ```bash
 cd P7-FSJA
-docker compose build
-docker compose up -d
+docker compose --env-file ../.env build
+docker compose --env-file ../.env up -d
 # API : http://localhost:8080/persons
 # UI  : https://localhost (redirection HTTP → HTTPS par Caddy)
 docker compose down
 ```
+
+Sans OpenSearch (application seule) : `docker compose build && docker compose up -d`.
 
 **Profil tout-en-un :**
 
@@ -243,27 +276,33 @@ docker pull ghcr.io/laurentcoufinal/projet9/orion-microcrm-front:latest
 cd P7-FSJA && docker compose up -d
 ```
 
-### 3.4 Stack observabilité (optionnelle)
+### 3.4 Stack observabilité
 
-Fichier racine [`docker-compose-opensearch.yml`](../docker-compose-opensearch.yml) — indépendant de MicroCRM :
+Fichier racine [`docker-compose-opensearch.yml`](../docker-compose-opensearch.yml) — indépendant de MicroCRM, mais requis pour la démo monitoring complète (SOC + DORA).
 
 | Service | Rôle | Port hôte |
 |---------|------|-----------|
 | `opensearch-node1` / `node2` | Cluster OpenSearch | 9200 |
-| `opensearch-dashboards` | UI (Security Analytics, Alerting) | 5601 |
+| `opensearch-dashboards` | UI (Security Analytics, Alerting, dashboards SOC/DORA) | 5601 |
 | `fluent-bit` | Collecte logs conteneurs + parsing JSON / lignes `SECURITY` | 24224 |
+| `dora-sync` | Sync nocturne GitHub Actions → index `microcrm-dora-metrics` | — |
 
-**Lancement :**
+**Prérequis `.env` racine :** `OPENSEARCH_INITIAL_ADMIN_PASSWORD`, `OPENSEARCH_PASSWORD` ; pour DORA : `GITHUB_TOKEN` (PAT Actions read).
+
+**Lancement :** voir [§3.0](#30-démarrage-complet-recommandé) ou :
 
 ```bash
-# Racine du dépôt — fichier .env requis (OPENSEARCH_INITIAL_ADMIN_PASSWORD, etc.)
-docker compose -f docker-compose-opensearch.yml up -d
-cd P7-FSJA && docker compose up -d
+# Racine du dépôt
+docker compose -f docker-compose-opensearch.yml up -d --build
+export OPENSEARCH_PASSWORD="$(grep OPENSEARCH_INITIAL_ADMIN_PASSWORD .env | cut -d= -f2-)"
+./observability/opensearch/setup-siem.sh
+cd P7-FSJA && docker compose --env-file ../.env up -d
+docker logs dora-sync --tail 20
 ```
 
-Référence détaillée des index et champs : [information_logge.md](../information_logge.md). Configuration Fluent Bit : [`observability/fluent-bit/`](../observability/fluent-bit/).
+Référence détaillée des index et champs : [information_logge.md](../information_logge.md). Configuration Fluent Bit : [`observability/fluent-bit/`](../observability/fluent-bit/). Dashboards : [observability/opensearch/README.md](../observability/opensearch/README.md).
 
-Le backend indexe les défauts et les accès sensibles lorsque `opensearch.enabled=true` (désactivé en CI : `OPENSEARCH_ENABLED=false`).
+Le backend indexe les défauts et les accès sensibles lorsque `opensearch.enabled=true` (désactivé en CI : `OPENSEARCH_ENABLED=false`). L'index `microcrm-dora-metrics` est alimenté par le conteneur `dora-sync` (cron 22h UTC par défaut).
 
 ---
 
@@ -431,19 +470,22 @@ Calculées à partir de l’historique GitHub Actions (onglet *Insights* → *Ac
 | **MTTR** | Temps moyen de rétablissement après échec CI | Durée entre échec et premier run vert |
 | **Change Failure Rate** | % de déploiements entraînant un rollback ou hotfix | Échecs `cd` / total déploiements |
 
-Rapport généré par [`scripts/export-dora-metrics.sh`](../scripts/export-dora-metrics.sh) — dernier export : [reports/dora-latest.md](reports/dora-latest.md).
+**Dashboard OpenSearch :** **MicroCRM DORA** (`http://localhost:5601`) — alimenté par le conteneur `dora-sync` qui synchronise l’historique GitHub Actions chaque soir (22h UTC) vers l’index `microcrm-dora-metrics`.
+
+Rapport Markdown : [`scripts/export-dora-metrics.sh`](../scripts/export-dora-metrics.sh) — dernier export : [reports/dora-latest.md](reports/dora-latest.md).
 
 ```bash
-gh auth login
+# 1. PAT GitHub (Actions read) dans .env racine : GITHUB_TOKEN=ghp_...
+docker compose -f docker-compose-opensearch.yml up -d --build
+export OPENSEARCH_PASSWORD="$(grep OPENSEARCH_INITIAL_ADMIN_PASSWORD .env | cut -d= -f2-)"
+./observability/opensearch/setup-siem.sh
+
+# 2. Vérifier la sync
+docker logs dora-sync
+
+# 3. Export Markdown (optionnel)
 ./scripts/export-dora-metrics.sh -o P7-FSJA/reports/dora-latest.md
 ```
-
-| Métrique | Définition | Source |
-|----------|------------|--------|
-| **Lead Time for Changes** | Commit → image GHCR disponible | `ci.yml` + `cd.yml` |
-| **Deployment Frequency** | Déploiements CD réussis / semaine | Workflow `CD` |
-| **MTTR** | Délai échec CI → succès sur `main` | Historique Actions |
-| **Change Failure Rate** | % CD en échec | Runs `CD` |
 
 ### 6.2 KPI proposés à Maria
 
@@ -472,7 +514,7 @@ gh auth login
 
 ### 6.3 Synthèse monitoring et maturité pipeline
 
-- **Points forts :** stack ELK équivalente opérationnelle en local ; dashboard **MicroCRM SOC** ; alertes **Slack** (moniteurs P0 + échec CI/nightly) ; export DORA scriptable ; couverture tests ≥ 80 %.
+- **Points forts :** stack ELK équivalente opérationnelle en local ; dashboards **MicroCRM SOC** et **MicroCRM DORA** ; alertes **Slack** (moniteurs P0 + échec CI/nightly) ; export DORA scriptable ; couverture tests ≥ 80 %.
 - **Points à améliorer :** Quality Gate Sonar bloquante ; captures SonarCloud en annexe ; smoke OpenSearch dans CI nightly (optionnel).
 - **Dashboards :** OpenSearch Dashboards (:5601), SonarCloud, GitHub Actions, GHCR.
 - **Démo Maria :** [observability/opensearch/DEMO-MARIA.md](../observability/opensearch/DEMO-MARIA.md).
@@ -631,12 +673,12 @@ cd P7-FSJA/back && ./gradlew test jacocoTestReport
 # Tests frontend (CI — Chrome requis)
 cd P7-FSJA/front && npm run test:ci
 
-# Stack MicroCRM
-cd P7-FSJA && docker compose up -d
-
-# Stack observabilité (racine dépôt)
-docker compose -f docker-compose-opensearch.yml up -d
+# Démarrage complet (recommandé) — racine du dépôt
+cp .env.example .env   # éditer OPENSEARCH_* + GITHUB_TOKEN
+docker compose -f docker-compose-opensearch.yml up -d --build
+export OPENSEARCH_PASSWORD="$(grep OPENSEARCH_INITIAL_ADMIN_PASSWORD .env | cut -d= -f2-)"
 ./observability/opensearch/setup-siem.sh
+cd P7-FSJA && docker compose --env-file ../.env up -d
 
 # Vérification automatisée
 ./P7-FSJA/scripts/verify-docker.sh
@@ -667,25 +709,26 @@ Volume estimé : ~4 000 mots / 619 lignes — conforme à la cible CDC (10–15 
 
 ### E. Observabilité — commandes SIEM
 
-**Tutoriel dashboard :** [observability/opensearch/TUTORIEL-DASHBOARD.md](../observability/opensearch/TUTORIEL-DASHBOARD.md) — guide pas-à-pas pour le tableau de bord **MicroCRM SOC**.
+**Tutoriels :** [TUTORIEL-DASHBOARD.md](../observability/opensearch/TUTORIEL-DASHBOARD.md) (**MicroCRM SOC**), [DEMO-MARIA.md](../observability/opensearch/DEMO-MARIA.md) (démo SOC + DORA).
 
-Référence complète : [information_logge.md](../information_logge.md).
+Référence complète : [information_logge.md](../information_logge.md), [observability/opensearch/README.md](../observability/opensearch/README.md).
 
 ```bash
-# Démarrer le cluster et Dashboards
-docker compose -f docker-compose-opensearch.yml up -d
+# Démarrer le cluster, Dashboards et dora-sync
+docker compose -f docker-compose-opensearch.yml up -d --build
 
-# Créer index et modèles SIEM
+# Créer index, modèles SIEM et importer dashboards SOC + DORA
+export OPENSEARCH_PASSWORD="$(grep OPENSEARCH_INITIAL_ADMIN_PASSWORD .env | cut -d= -f2-)"
 ./observability/opensearch/setup-siem.sh
 
-# Vérifier santé cluster
-curl -ks -u admin:$OPENSEARCH_INITIAL_ADMIN_PASSWORD \
-  https://localhost:9200/_cluster/health
+# Vérifier santé cluster et sync DORA
+curl -ks -u admin:$OPENSEARCH_PASSWORD https://localhost:9200/_cluster/health
+docker logs dora-sync --tail 20
 
-# Dashboards : https://localhost:5601
+# Dashboards : http://localhost:5601 — MicroCRM SOC + MicroCRM DORA (Last 90 days)
 ```
 
-Index principaux : `microcrm-defects`, `microcrm-security-events`, `microcrm-server-state`, `security-auditlog-*`.
+Index principaux : `microcrm-defects`, `microcrm-security-events`, `microcrm-server-state`, `microcrm-dora-metrics`, `security-auditlog-*`.
 
 ### F. Alertes Slack
 

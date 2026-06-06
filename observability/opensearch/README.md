@@ -13,6 +13,8 @@
 | `security-analytics-detectors.json` | Détecteurs bucket-level (5xx, 4xx, volume IP) |
 | `index-template-security-events.json` | Mapping `microcrm-security-events` |
 | `index-ci-event.sh` | Publication événements CI vers OpenSearch |
+| `sync-dora-from-github.sh` | Sync historique GitHub Actions → index `microcrm-dora-metrics` |
+| `index-template-dora-metrics.json` | Mapping métriques DORA |
 | `setup-slack-destination.sh` | Destination webhook Slack + actions sur moniteurs P0 |
 | `DEMO-MARIA.md` | Procédure démo monitoring pour Maria |
 
@@ -26,7 +28,30 @@ chmod +x observability/opensearch/setup-siem.sh observability/opensearch/index-c
 ./observability/opensearch/setup-siem.sh
 ```
 
-Dashboards : http://localhost:5601 → **MicroCRM SOC**
+Dashboards : http://localhost:5601 → **MicroCRM SOC** / **MicroCRM DORA**
+
+## Métriques DORA (GitHub → OpenSearch)
+
+Le conteneur **`dora-sync`** (dans `docker-compose-opensearch.yml`) récupère l’historique GitHub Actions chaque soir (22h UTC par défaut) et l’indexe dans `microcrm-dora-metrics`.
+
+1. Créer un **PAT GitHub** (Actions read) et l’ajouter dans `.env` :
+   ```bash
+   GITHUB_TOKEN=ghp_votre_token
+   ```
+2. Démarrer ou reconstruire la stack :
+   ```bash
+   docker compose -f docker-compose-opensearch.yml up -d --build
+   ```
+3. Provisionner les dashboards :
+   ```bash
+   ./observability/opensearch/setup-siem.sh
+   ```
+4. Vérifier la sync : `docker logs dora-sync`
+
+Sync manuelle immédiate :
+```bash
+docker exec dora-sync /app/sync-dora-from-github.sh -d 90
+```
 
 ## Alertes P0
 

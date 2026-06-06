@@ -68,6 +68,17 @@ curl -X POST http://localhost:8080/persons -H 'Content-Type: application/json' \
 
 ## 6. Rapport de santé et DORA
 
+### Dashboard OpenSearch DORA
+
+1. Ajouter `GITHUB_TOKEN` (PAT Actions read) dans `.env` à la racine du dépôt.
+2. `docker compose -f docker-compose-opensearch.yml up -d --build`
+3. `./observability/opensearch/setup-siem.sh`
+4. Dashboards → **MicroCRM DORA** (4 KPI + graphiques CD / Lead Time)
+
+Vérifier la collecte : `docker logs dora-sync`
+
+### Export Markdown (complément)
+
 ```bash
 ./observability/scripts/health-status.sh
 ./scripts/export-dora-metrics.sh -o P7-FSJA/reports/dora-latest.md

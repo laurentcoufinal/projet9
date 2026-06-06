@@ -103,6 +103,30 @@ services:
     networks:
       - opensearch-net
 
+  dora-sync:
+    build: ./observability/dora-sync
+    container_name: dora-sync
+    env_file: .env
+    environment:
+      GITHUB_REPOSITORY: ${GITHUB_REPOSITORY:-laurentcoufinal/projet9}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      OPENSEARCH_URL: https://opensearch-node1:9200
+      OPENSEARCH_USERNAME: admin
+      OPENSEARCH_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      DORA_SYNC_DAYS: ${DORA_SYNC_DAYS:-90}
+      DORA_SYNC_CRON: ${DORA_SYNC_CRON:-0 22 * * *}
+      DORA_INGEST_SOURCE: dora_sync_container
+      DORA_COMPUTE_PATH: /app/dora_compute.py
+    depends_on:
+      opensearch-node1:
+        condition: service_healthy
+    volumes:
+      - ./observability/opensearch/sync-dora-from-github.sh:/app/sync-dora-from-github.sh:ro
+      - ./scripts/lib/dora_compute.py:/app/dora_compute.py:ro
+    networks:
+      - opensearch-net
+    restart: unless-stopped
+
 volumes:
   opensearch-data1:
   opensearch-data2:

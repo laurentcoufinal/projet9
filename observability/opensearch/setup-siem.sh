@@ -19,7 +19,17 @@ load_dotenv() {
 
 load_dotenv "${REPO_ROOT}/.env" || load_dotenv "${SCRIPT_DIR}/.env" || true
 
-OS_HOST="${OPENSEARCH_HOST:-https://localhost:9200}"
+normalize_os_host() {
+  local host="${OPENSEARCH_HOST:-localhost}"
+  local port="${OPENSEARCH_PORT:-9200}"
+  if [[ "${host}" == http://* || "${host}" == https://* ]]; then
+    printf '%s' "${host}"
+  else
+    printf 'https://%s:%s' "${host}" "${port}"
+  fi
+}
+
+OS_HOST="$(normalize_os_host)"
 OS_USER="${OPENSEARCH_USERNAME:-admin}"
 OS_PASS="${OPENSEARCH_PASSWORD:-${OPENSEARCH_INITIAL_ADMIN_PASSWORD:-}}"
 DASHBOARDS_URL="${OPENSEARCH_DASHBOARDS_URL:-http://localhost:5601}"
@@ -49,6 +59,11 @@ curl_os -X PUT "${OS_HOST}/_index_template/microcrm-server-state" \
   -H 'Content-Type: application/json' \
   --data-binary "@${SCRIPT_DIR}/index-template-server-state.json"
 
+echo "==> Index template microcrm-dora-metrics"
+curl_os -X PUT "${OS_HOST}/_index_template/microcrm-dora-metrics" \
+  -H 'Content-Type: application/json' \
+  --data-binary "@${SCRIPT_DIR}/index-template-dora-metrics.json"
+
 echo "==> Bootstrap index SIEM (documents init pour Dashboards)"
 TS="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 curl_os -X POST "${OS_HOST}/microcrm-defects/_doc/bootstrap?refresh=wait_for" \
@@ -60,6 +75,9 @@ curl_os -X POST "${OS_HOST}/microcrm-security-events/_doc/bootstrap?refresh=wait
 curl_os -X POST "${OS_HOST}/microcrm-server-state/_doc/bootstrap?refresh=wait_for" \
   -H 'Content-Type: application/json' \
   -d "{\"@timestamp\":\"${TS}\",\"event_type\":\"health\",\"source\":\"bootstrap\",\"status\":\"up\",\"bootstrap\":true}"
+curl_os -X POST "${OS_HOST}/microcrm-dora-metrics/_doc/bootstrap?refresh=wait_for" \
+  -H 'Content-Type: application/json' \
+  -d "{\"timestamp\":\"${TS}\",\"eventType\":\"dora_snapshot\",\"repo\":\"bootstrap\",\"lead_time_minutes\":0,\"deployment_frequency_per_week\":0,\"mttr_hours\":0,\"change_failure_rate_pct\":0,\"bootstrap\":true}"
 
 echo "==> Import saved objects (Dashboards)"
 IMPORT_RESULT=$(curl -ks -u "${OS_USER}:${OS_PASS}" \
@@ -69,6 +87,42 @@ IMPORT_RESULT=$(curl -ks -u "${OS_USER}:${OS_PASS}" \
   --form "file=@${SCRIPT_DIR}/saved-objects.ndjson")
 echo "${IMPORT_RESULT}" | head -c 500
 echo
+
+echo "==> Fenêtre temporelle dashboard MicroCRM DORA (90 jours)"
+python3 - "${DASHBOARDS_URL}" "${OS_USER}" "${OS_PASS}" <<'PY' || true
+import json, subprocess, sys
+
+dashboards_url, user, password = sys.argv[1:4]
+
+def curl(args):
+    return subprocess.run(
+        ["curl", "-ks", "-u", f"{user}:{password}", *args],
+        capture_output=True, text=True, check=False,
+    )
+
+get_resp = curl([
+    f"{dashboards_url}/api/saved_objects/dashboard/microcrm-dora-dashboard",
+    "-H", "osd-xsrf: true",
+    "-H", "securitytenant: global",
+])
+if get_resp.returncode != 0 or not get_resp.stdout.strip():
+    sys.exit(0)
+obj = json.loads(get_resp.stdout)
+attrs = dict(obj.get("attributes", {}))
+attrs["timeRestore"] = True
+attrs["timeFrom"] = "now-90d"
+attrs["timeTo"] = "now"
+put_resp = curl([
+    "-X", "PUT",
+    f"{dashboards_url}/api/saved_objects/dashboard/microcrm-dora-dashboard",
+    "-H", "Content-Type: application/json",
+    "-H", "osd-xsrf: true",
+    "-H", "securitytenant: global",
+    "-d", json.dumps({"attributes": attrs}),
+])
+if put_resp.returncode == 0:
+    print("  - timeRestore: now-90d → now")
+PY
 
 echo "==> Rafraîchissement des index patterns Dashboards"
 refresh_index_pattern_fields() {
@@ -120,6 +174,7 @@ for entry in \
   "microcrm-defects-pattern:microcrm-defects*" \
   "microcrm-server-state-pattern:microcrm-server-state*" \
   "microcrm-security-events-pattern:microcrm-security-events*" \
+  "microcrm-dora-metrics-pattern:microcrm-dora-metrics*" \
   "security-auditlog-pattern:security-auditlog-*"; do
   pattern_id="${entry%%:*}"
   pattern_title="${entry#*:}"
@@ -162,7 +217,7 @@ for i in $(seq 0 $((DETECTORS - 1))); do
   fi
 done
 
-echo "==> Terminé. Ouvrir Dashboards → MicroCRM SOC"
+echo "==> Terminé. Ouvrir Dashboards → MicroCRM SOC / MicroCRM DORA"
 if [[ -n "${SLACK_WEBHOOK_URL:-}" ]]; then
   echo "==> SLACK_WEBHOOK_URL défini — exécuter: ./observability/opensearch/setup-slack-destination.sh"
 fi

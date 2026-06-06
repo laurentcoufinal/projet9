@@ -11,6 +11,7 @@ Application CRM simplifiée (Spring Boot 3 + Angular 18) avec chaîne **CI/CD**,
 
 ## Sommaire
 
+- [Démarrage complet (recommandé)](#démarrage-complet-recommandé)
 - [Organisation du code](#organisation-du-code)
 - [Démarrage local (sources)](#démarrage-local-sources)
 - [Tests](#tests)
@@ -32,6 +33,56 @@ Ce monorepo contient :
 | `front/` | Angular 18.2, Karma/Jasmine |
 | `misc/docker/` | Caddyfile, configuration Supervisor |
 | `.github/workflows/` (racine du dépôt) | Pipelines CI/CD |
+
+## Démarrage complet (recommandé)
+
+Procédure pour lancer **MicroCRM + OpenSearch + dashboards SOC/DORA** depuis la racine du dépôt (`projet9/`).
+
+### Prérequis
+
+- Docker Engine ≥ 24, Docker Compose v2
+- Fichier **`.env` à la racine** du dépôt (pas seulement `P7-FSJA/.env`) :
+
+```shell
+cp .env.example .env
+# Éditer : OPENSEARCH_INITIAL_ADMIN_PASSWORD, OPENSEARCH_PASSWORD (même valeur)
+# Optionnel mais recommandé pour le dashboard DORA :
+# GITHUB_TOKEN=ghp_...  (PAT fine-grained : Actions read + Metadata read)
+```
+
+### Séquence
+
+```shell
+# 1. Stack observabilité (OpenSearch, Dashboards, Fluent Bit, dora-sync)
+docker compose -f docker-compose-opensearch.yml up -d --build
+
+# 2. Initialiser index, modèles SIEM et importer les dashboards
+export OPENSEARCH_PASSWORD="$(grep OPENSEARCH_INITIAL_ADMIN_PASSWORD .env | cut -d= -f2-)"
+./observability/opensearch/setup-siem.sh
+
+# 3. Application MicroCRM (indexation back vers OpenSearch)
+cd P7-FSJA
+docker compose --env-file ../.env up -d
+```
+
+| Service | URL |
+|---------|-----|
+| API MicroCRM | http://localhost:8080/persons |
+| UI MicroCRM | https://localhost |
+| OpenSearch API | https://localhost:9200 |
+| OpenSearch Dashboards | http://localhost:5601 (dashboards **MicroCRM SOC** et **MicroCRM DORA**) |
+
+Dans Dashboards, sélectionner la période **Last 90 days** pour le dashboard DORA.
+
+Vérification rapide :
+
+```shell
+docker ps --format 'table {{.Names}}\t{{.Status}}' | grep -E 'opensearch|fluent|dora|back|front'
+docker logs dora-sync --tail 20
+curl -f http://localhost:8080/persons
+```
+
+Pour le détail observabilité, voir [Observabilité (OpenSearch)](#observabilité-opensearch). Pour les sources sans Docker, voir [Démarrage local (sources)](#démarrage-local-sources).
 
 ## Démarrage local (sources)
 
@@ -87,16 +138,22 @@ Stack OpenSearch **indépendante** de MicroCRM : [`docker-compose-opensearch.yml
 
 ### Prérequis
 
-1. Copier [`.env.example`](../.env.example) vers `.env` à la racine (mot de passe admin OpenSearch + variables `OPENSEARCH_*`).
+1. Copier [`.env.example`](../.env.example) vers **`.env` à la racine** du dépôt (mot de passe admin OpenSearch + variables `OPENSEARCH_*`).
 2. Définir `OPENSEARCH_PASSWORD` avec la **même valeur** que `OPENSEARCH_INITIAL_ADMIN_PASSWORD`.
+3. Pour le dashboard **MicroCRM DORA** : ajouter `GITHUB_TOKEN` (PAT Actions read) et optionnellement `GITHUB_REPOSITORY`, `DORA_SYNC_DAYS`, `DORA_SYNC_CRON`.
+
+Voir aussi la procédure unifiée : [Démarrage complet (recommandé)](#démarrage-complet-recommandé).
 
 ### Démarrage
 
 Lancer **d'abord** la stack observabilité (Fluent Bit doit écouter sur le port `24224` avant MicroCRM) :
 
 ```shell
-# Racine du dépôt — OpenSearch + Dashboards + Fluent Bit
-docker compose -f docker-compose-opensearch.yml up -d
+# Racine du dépôt — OpenSearch + Dashboards + Fluent Bit + dora-sync
+docker compose -f docker-compose-opensearch.yml up -d --build
+
+export OPENSEARCH_PASSWORD="$(grep OPENSEARCH_INITIAL_ADMIN_PASSWORD .env | cut -d= -f2-)"
+./observability/opensearch/setup-siem.sh
 
 # Puis l'application MicroCRM
 cd P7-FSJA
@@ -109,8 +166,9 @@ docker compose --env-file ../.env up -d
 | Service | URL |
 |---------|-----|
 | OpenSearch API (node1) | https://localhost:9200 |
-| OpenSearch Dashboards | http://localhost:5601 (utilisateur `admin`) |
+| OpenSearch Dashboards | http://localhost:5601 (dashboards **MicroCRM SOC** + **MicroCRM DORA**, utilisateur `admin`) |
 | Fluent Bit (forward) | `host:24224` |
+| `dora-sync` | Sync nocturne GitHub Actions → index `microcrm-dora-metrics` (`docker logs dora-sync`) |
 
 Par défaut, les logs conteneur restent en **json-file** (arrêt Docker fiable). Le driver **fluentd** peut bloquer `docker stop` si Fluent Bit n'écoute pas sur `24224` — utiliser `docker-compose.fluent-logs.yml` seulement avec la stack observabilité démarrée. Sur Linux/WSL : `FLUENTD_ADDRESS=172.17.0.1:24224` dans `.env`.
 
@@ -121,6 +179,7 @@ Par défaut, les logs conteneur restent en **json-file** (arrêt Docker fiable).
 | `microcrm-defects` | Erreurs applicatives 4xx/5xx + `requestId` | Client Java (`OpenSearchDefectLogger`) |
 | `microcrm-server-state` | Santé (back Actuator, front, cluster OS), logs conteneurs, CPU/RAM/disque host | [Fluent Bit](../observability/fluent-bit/fluent-bit.conf) |
 | `microcrm-security-events` | Journal d'accès API (IP, path, status, `requestId`), événements CI | `SecurityAccessLogFilter` + Fluent Bit + [index-ci-event.sh](../observability/opensearch/index-ci-event.sh) |
+| `microcrm-dora-metrics` | Historique workflows GitHub Actions (Lead Time, CD, MTTR, CFR) | Conteneur `dora-sync` + [sync-dora-from-github.sh](../observability/opensearch/sync-dora-from-github.sh) |
 | `security-auditlog-*` | Audit admin OpenSearch | Plugin Security (activé dans le compose) |
 
 ### SIEM (sécurité)
@@ -133,8 +192,9 @@ chmod +x ../observability/opensearch/setup-siem.sh
 ../observability/opensearch/setup-siem.sh
 ```
 
-- Dashboard **MicroCRM SOC** : http://localhost:5601
+- Dashboards **MicroCRM SOC** et **MicroCRM DORA** : http://localhost:5601 (période **Last 90 days** pour DORA)
 - Alertes : spike 5xx/4xx, health down, DELETE massifs (voir [observability/opensearch/README.md](../observability/opensearch/README.md))
+- Export DORA Markdown : [`../scripts/export-dora-metrics.sh`](../scripts/export-dora-metrics.sh)
 - Doc détaillée : [information logge.md](../information%20logge.md) à la racine du dépôt
 
 Vérification rapide :
@@ -161,8 +221,17 @@ En développement local (`./gradlew bootRun`), le back cible `https://localhost:
 
 ### Stack back + front (recommandé)
 
+Avec la stack OpenSearch démarrée, utiliser `--env-file ../.env` pour activer l'indexation des défauts et accès API :
+
 ```shell
-# Depuis ce répertoire (P7-FSJA)
+# Depuis ce répertoire (P7-FSJA) — voir aussi Démarrage complet (recommandé)
+docker compose --env-file ../.env build
+docker compose --env-file ../.env up -d
+```
+
+Sans OpenSearch (application seule) :
+
+```shell
 docker compose build
 docker compose up -d
 ```
@@ -206,6 +275,7 @@ Dépôt : https://github.com/laurentcoufinal/projet9
 | **CI** | `.github/workflows/ci.yml` | Push / PR sur `main` |
 | **CD** | `.github/workflows/cd.yml` | CI réussi sur `main`, ou manuel |
 | **Nightly** | `.github/workflows/nightly.yml` | Cron 02:00 UTC, ou manuel |
+| **Dependabot** | `.github/dependabot.yml` | PR hebdomadaires (Gradle, npm, Actions, Docker) → déclenche la CI |
 
 ### Étapes CI
 
@@ -254,6 +324,9 @@ docker compose up -d
 | Document | Description |
 |----------|-------------|
 | [`documentation-technique.md`](documentation-technique.md) | Documentation complète (pipeline, sécurité, sauvegarde, KPI) — export PDF via Pandoc |
+| [`../observability/opensearch/README.md`](../observability/opensearch/README.md) | Stack OpenSearch, SIEM, DORA |
+| [`../observability/opensearch/TUTORIEL-DASHBOARD.md`](../observability/opensearch/TUTORIEL-DASHBOARD.md) | Tutoriel dashboard **MicroCRM SOC** |
+| [`../observability/opensearch/DEMO-MARIA.md`](../observability/opensearch/DEMO-MARIA.md) | Démo monitoring + DORA |
 | [`../cdc.md`](../cdc.md) | Cahier des charges |
 | [`../documentation techinique.md`](../documentation%20techinique.md) | Template fourni |
 
@@ -287,6 +360,10 @@ Rapports détaillés : [`front/audit-avant.txt`](front/audit-avant.txt), [`front
 | Healthcheck front en échec | Caddy redirige HTTP→HTTPS ; tester `curl -k https://localhost` |
 | SonarCloud échoue en CI | Vérifier `SONAR_TOKEN` et la clé projet dans `sonar-project.properties` |
 | Ports déjà utilisés | `docker compose down` ou changer les mappings dans `docker-compose.yml` |
+| Dashboard DORA vide | Vérifier `GITHUB_TOKEN` dans `.env` racine, `docker logs dora-sync`, période **Last 90 days** dans Dashboards |
+| `setup-siem.sh` échoue (connexion) | `export OPENSEARCH_PASSWORD` depuis `.env` ; OpenSearch doit être sur `https://localhost:9200` |
+| Back n'indexe pas dans OpenSearch | Lancer MicroCRM avec `docker compose --env-file ../.env up -d` (pas sans `--env-file`) |
+| Sync DORA manuelle | `docker exec dora-sync /app/sync-dora-from-github.sh -d 90` |
 
 ## Licence / contexte
 
