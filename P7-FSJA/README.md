@@ -13,6 +13,7 @@ Application CRM simplifiée (Spring Boot 3 + Angular 18) avec chaîne **CI/CD**,
 
 - [Démarrage complet (recommandé)](#démarrage-complet-recommandé)
 - [Organisation du code](#organisation-du-code)
+- [Choix techniques](#choix-techniques)
 - [Démarrage local (sources)](#démarrage-local-sources)
 - [Tests](#tests)
 - [Observabilité (OpenSearch)](#observabilité-opensearch)
@@ -33,6 +34,81 @@ Ce monorepo contient :
 | `front/` | Angular 18.2, Karma/Jasmine |
 | `misc/docker/` | Caddyfile, configuration Supervisor |
 | `.github/workflows/` (racine du dépôt) | Pipelines CI/CD |
+
+## Choix techniques
+
+Synthèse des décisions d'architecture et d'industrialisation. Détail complet : [`documentation-technique.md`](documentation-technique.md).
+
+### Application
+
+| Choix | Pourquoi |
+|-------|----------|
+| **Java 17 + Spring Boot 3** | Stack du projet P7 ; Spring Data REST pour exposer l'API rapidement |
+| **Angular 18.2** | Branche LTS (migration depuis 17) ; couverture tests Karma ~96 % |
+| **HSQLDB en mémoire** | Démo et CI sans base externe ; données rechargées au démarrage |
+| **Gradle + `npm ci`** | Builds reproductibles ; caches Gradle/npm exploités en CI |
+
+### Conteneurisation
+
+| Choix | Pourquoi |
+|-------|----------|
+| **Docker multi-stage** | Séparer build (Node, Gradle) et runtime (Alpine léger) ; cache Docker optimisé |
+| **Alpine + Caddy** | Images légères ; HTTPS automatique en local (redirection HTTP 80 → HTTPS 443) |
+| **Back / front séparés** | Scaling indépendant, healthchecks ciblés, `depends_on` front → back |
+| **Driver `json-file` par défaut** | Arrêt Docker fiable ; Fluent Bit via profil optionnel `docker-compose.fluent-logs.yml` |
+| **Port 8080 (back)** | Aligné sur Spring Boot (correction du port 4200 initial) |
+
+### Pipeline CI/CD
+
+| Choix | Pourquoi |
+|-------|----------|
+| **GitHub Actions** (vs Jenkins) | Intégré au dépôt GitHub, pas de serveur CI dédié, secrets natifs |
+| **Jobs parallèles** back / front | Réduction du Lead Time ; cible pipeline < 15 min |
+| **Docker découplé de Sonar** | Mise en route non bloquante ; images buildables pendant la config SonarCloud |
+| **GHCR** | Registre lié à GitHub ; CD automatique après CI verte sur `main` |
+| **Nightly + Dependabot** | Filet anti-régression quotidien + dette technique traitée en continu |
+| **`paths-ignore: **/*.md`** | La documentation seule ne déclenche pas la CI |
+| **OpenSearch CI en `continue-on-error`** | Indexation des événements CI sans fragiliser la chaîne |
+
+Schéma : [`diagrams/pipeline-cicd-overview.drawio`](diagrams/pipeline-cicd-overview.drawio).
+
+### Observabilité
+
+| Choix | Pourquoi |
+|-------|----------|
+| **OpenSearch** (vs Elastic Cloud) | Stack ELK équivalente open source, déployable en local sans coût cloud |
+| **Fluent Bit** (vs Logstash) | Collecteur léger ; logs conteneurs + parsing JSON |
+| **Stack séparée** (`docker-compose-opensearch.yml`) | Observabilité indépendante de l'app ; Fluent Bit doit démarrer avant MicroCRM |
+| **`X-Request-Id`** | Corrélation front → back → index OpenSearch pour le diagnostic d'incidents |
+| **`dora-sync`** | Métriques DORA (Lead Time, Deployment Frequency, MTTR, CFR) depuis GitHub Actions |
+| **Dashboards SOC + DORA** | Exploitation applicative (erreurs, accès) et performance DevOps |
+
+**Équivalence stack ELK :**
+
+| Composant ELK | Implémentation MicroCRM |
+|---------------|-------------------------|
+| Elasticsearch | **OpenSearch** (cluster Docker) |
+| Logstash | **Fluent Bit** |
+| Kibana | **OpenSearch Dashboards** (MicroCRM SOC + MicroCRM DORA) |
+
+### Qualité, sécurité et alertes
+
+| Choix | Pourquoi |
+|-------|----------|
+| **SonarCloud** | Analyse statique centralisée Java + TypeScript ; objectif couverture ≥ 80 % |
+| **JaCoCo + LCOV** | Rapports de couverture injectés automatiquement dans Sonar via le pipeline |
+| **Dependabot** | Mises à jour hebdomadaires ; chaque PR re-valide la CI |
+| **Alertes Slack** | Échec CI/nightly (`notify-slack.sh`) + moniteurs P0 OpenSearch (`setup-slack-destination.sh`) |
+| **Secrets hors repo** | `SONAR_TOKEN`, `SLACK_WEBHOOK_URL`, `OPENSEARCH_*` dans GitHub Secrets ou `.env` local |
+
+**Alertes Slack (optionnel) :**
+
+| Usage | Configuration |
+|-------|---------------|
+| Échec CI / nightly | Secret GitHub `SLACK_WEBHOOK_URL` |
+| Spike 5xx, health down (OpenSearch) | `SLACK_WEBHOOK_URL` dans `.env` racine + `./observability/opensearch/setup-slack-destination.sh` |
+
+> **Approche incrémentale :** pipeline fonctionnel d'abord (tests + build + images), puis durcissement (couverture, SIEM, DORA, Slack). **68 tests** automatisés (34 back + 34 front), couverture observée ~94 % / ~96 %.
 
 ## Démarrage complet (recommandé)
 
@@ -214,6 +290,8 @@ En développement local (`./gradlew bootRun`), le back cible `https://localhost:
 
 ## Docker & Docker Compose
 
+Le [`Dockerfile`](Dockerfile) utilise un **build multi-stage** (stages `front-build`, `back-build`, puis images Alpine d'exécution) pour séparer compilation et runtime. Voir [Choix techniques — Conteneurisation](#conteneurisation).
+
 ### Prérequis
 
 - Docker Engine ≥ 24
@@ -221,7 +299,7 @@ En développement local (`./gradlew bootRun`), le back cible `https://localhost:
 
 ### Stack back + front (recommandé)
 
-Avec la stack OpenSearch démarrée, utiliser `--env-file ../.env` pour activer l'indexation des défauts et accès API :
+Avec la stack OpenSearch démarrée, utiliser `--env-file ../.env` pour activer l'indexation des défauts et accès API vers OpenSearch (`OPENSEARCH_ENABLED=true`) :
 
 ```shell
 # Depuis ce répertoire (P7-FSJA) — voir aussi Démarrage complet (recommandé)
@@ -270,6 +348,8 @@ docker run -it --rm -p 80:80 -p 443:443 orion-microcrm-front:latest
 
 Dépôt : https://github.com/laurentcoufinal/projet9
 
+**Ordre d'exécution :** `backend` et `frontend` en parallèle → `sonarcloud` → `docker` → CD sur `main`. Le job Docker est indépendant de Sonar pour ne pas bloquer la mise en route. Schéma : [`diagrams/pipeline-cicd-overview.drawio`](diagrams/pipeline-cicd-overview.drawio). Voir [Choix techniques — Pipeline CI/CD](#pipeline-cicd).
+
 | Workflow | Fichier | Déclencheur |
 |----------|---------|-------------|
 | **CI** | `.github/workflows/ci.yml` | Push / PR sur `main` |
@@ -298,9 +378,10 @@ Le fichier [`sonar-project.properties`](sonar-project.properties) définit les c
 
 ### Quality Gate (objectifs)
 
+- Couverture backend et frontend **≥ 80 %** (observé localement ~94 % / ~96 % — 68 tests)
 - Aucune nouvelle vulnérabilité Blocker / Critical
-- Couverture backend ≥ 50 % (à affiner après le premier scan)
 - Hotspots de sécurité revus
+- Quality Gate bloquante en CI : prochaine étape de maturité (voir [documentation-technique.md](documentation-technique.md) §5.3)
 
 ## Déploiement (GHCR)
 
